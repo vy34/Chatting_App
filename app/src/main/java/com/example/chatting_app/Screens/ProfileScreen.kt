@@ -23,6 +23,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,7 +35,9 @@ import androidx.navigation.NavController
 import com.example.chatting_app.CommonDivider
 import com.example.chatting_app.CommonImage
 import com.example.chatting_app.CommonProcessBar
+import com.example.chatting_app.DestinationScreen
 import com.example.chatting_app.LCViewModel
+import com.example.chatting_app.navigateTo
 
 @Composable
 fun ProfileScreen(navController: NavController, vm: LCViewModel) {
@@ -39,6 +45,13 @@ fun ProfileScreen(navController: NavController, vm: LCViewModel) {
     if (inProgress){
         CommonProcessBar()
     }else{
+        val userData = vm.userData.value
+        var name by rememberSaveable {
+            mutableStateOf(userData?.name?:"")
+        }
+        var number by rememberSaveable {
+            mutableStateOf(userData?.number?:"")
+        }
         Column(modifier = Modifier.fillMaxSize()) {
             ProfileContent(
                 modifier = Modifier
@@ -46,13 +59,20 @@ fun ProfileScreen(navController: NavController, vm: LCViewModel) {
                     .verticalScroll(rememberScrollState())
                     .padding(8.dp),
                 vm=vm,
-                name = "",
-                number = "",
-                onNameChange = {""},
-                onNumberChange = {""},
-                onBack = {},
-                onSave = {},
-                onLogOut = {}
+                name = name,
+                number = number,
+                onNameChange = {name = it},
+                onNumberChange = {number = it},
+                onBack = {
+                         navigateTo(navController = navController, route = DestinationScreen.ChatList.route)
+                },
+                onSave = {
+                         vm.createOrUpdateProfile(name = name, number = number)
+                },
+                onLogOut = {
+                    vm.logout()
+                    navigateTo(navController = navController, route = DestinationScreen.Login.route)
+                }
             )
             BottomNavigationMenu(selectedItem = BottomNavigationItem.PROFILE, navController = navController)
 
@@ -138,7 +158,7 @@ fun ProfileContent(
                 .padding(16.dp),
             horizontalArrangement = Arrangement.Center
         ) {
-            Text(text = "LogOut", modifier = Modifier.clickable { onLogOut.invoke() })
+            Text(text = "Log Out", modifier = Modifier.clickable { onLogOut.invoke() })
         }
     }
 }

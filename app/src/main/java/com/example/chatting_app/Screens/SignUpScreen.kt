@@ -97,7 +97,7 @@ fun SignUpScreen(navController: NavController,vm:LCViewModel) {
                 emailState.value.text,
                 passwordState.value.text,
 
-            )}, modifier = Modifier.padding(8.dp)) {
+                )}, modifier = Modifier.padding(8.dp)) {
                 Text(text = "Sign Up")
 
             }
