@@ -5,14 +5,24 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,7 +35,12 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -37,79 +52,147 @@ import com.example.chatting_app.R
 import com.example.chatting_app.navigateTo
 
 @OptIn(ExperimentalMaterial3Api::class)
-
 @Composable
-fun SignUpScreen(navController: NavController,vm:LCViewModel) {
+fun SignUpScreen(navController: NavController, vm: LCViewModel) {
 
-    CheckSignedIn(vm=vm,navController=navController)
+    CheckSignedIn(vm = vm, navController = navController)
 
 
-    Box (modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier
-            .fillMaxSize()
-            .wrapContentHeight()
-            .verticalScroll(rememberScrollState()),
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .wrapContentHeight()
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            val nameState= remember { mutableStateOf(TextFieldValue()) }
-            val numberState= remember { mutableStateOf(TextFieldValue()) }
-            val emailState= remember { mutableStateOf(TextFieldValue()) }
-            val passwordState= remember { mutableStateOf(TextFieldValue()) }
+            val nameState = remember { mutableStateOf(TextFieldValue()) }
+            val numberState = remember { mutableStateOf(TextFieldValue()) }
+            val emailState = remember { mutableStateOf(TextFieldValue()) }
+            val passwordState = remember { mutableStateOf(TextFieldValue()) }
 
-            val local= LocalFocusManager.current
+            val local = LocalFocusManager.current
 
-            Image(painter = painterResource(id = R.drawable.chat), contentDescription =null,
+            Image(
+                painter = painterResource(id = R.drawable.chat), contentDescription = null,
                 modifier = Modifier
                     .size(200.dp)
                     .padding(top = 16.dp)
                     .padding(8.dp)
             )
-            Text(text = "Sign Up",
+            Text(
+                text = "Sign Up",
                 fontSize = 30.sp,
                 fontFamily = FontFamily.SansSerif,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(8.dp)
             )
-            OutlinedTextField(value = nameState.value,
-                onValueChange ={nameState.value=it},
-                label={ Text(text = "Name")},
+            OutlinedTextField(
+                value = nameState.value,
+                onValueChange = { nameState.value = it },
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(id = R.drawable.profile),
+                        contentDescription = "",
+                        modifier = Modifier.size(25.dp)
+                    )
+                },
+                label = { Text(text = "Name") },
                 modifier = Modifier.padding(8.dp)
             )
-            OutlinedTextField(value = numberState.value,
+            OutlinedTextField(
+                value = numberState.value,
                 onValueChange = { numberState.value = it },
                 label = { Text(text = "Phone Number") },
-                modifier = Modifier.padding(8.dp)
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(id = R.drawable.telephone),
+                        contentDescription = "",
+                        modifier = Modifier.size(25.dp)
+                    )
+                },
+                modifier = Modifier.padding(8.dp),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number,
+                    capitalization = KeyboardCapitalization.None
+                )
             )
-            OutlinedTextField(value = emailState.value,
+            OutlinedTextField(
+                value = emailState.value,
                 onValueChange = { emailState.value = it },
                 label = { Text(text = "Email") },
-                modifier = Modifier.padding(8.dp)
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(id = R.drawable.arroba),
+                        contentDescription = "",
+                        modifier = Modifier.size(25.dp)
+                    )
+                },
+                modifier = Modifier.padding(8.dp),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    autoCorrect = false
+                )
             )
-            OutlinedTextField(value = passwordState.value,
+            val passwordVisible = remember {
+                mutableStateOf(false)
+            }
+            OutlinedTextField(
+                value = passwordState.value,
                 onValueChange = { passwordState.value = it },
                 label = { Text(text = "Password") },
-                modifier = Modifier.padding(8.dp)
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(id = R.drawable.padlock),
+                        contentDescription = "",
+                        modifier = Modifier.size(25.dp)
+                    )
+                },
+                trailingIcon = {
+                    val iconImage = if (passwordVisible.value) {
+                        Icons.Filled.Visibility
+                    } else {
+                        Icons.Filled.VisibilityOff
+                    }
+                    var description = if (passwordVisible.value) {
+                        "Hide password"
+                    } else {
+                        "Show password"
+                    }
+                    IconButton(onClick = { passwordVisible.value = !passwordVisible.value }) {
+                        Icon(imageVector = iconImage, contentDescription = description)
+                    }
+                },
+                visualTransformation = if (passwordVisible.value) VisualTransformation.None else PasswordVisualTransformation(),
+                modifier = Modifier.padding(8.dp),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
-            Button(onClick = { vm.SignUp(
-                nameState.value.text,
-                numberState.value.text,
-                emailState.value.text,
-                passwordState.value.text,
+            Button(onClick = {
+                vm.SignUp(
+                    nameState.value.text,
+                    numberState.value.text,
+                    emailState.value.text,
+                    passwordState.value.text,
 
-                )}, modifier = Modifier.padding(8.dp)) {
+                    )
+            }, modifier = Modifier.padding(8.dp)) {
                 Text(text = "Sign Up")
 
             }
-            Text(text = "Already a user ? Go to login", modifier = Modifier
-                .padding(8.dp)
-                .clickable {
-                    navigateTo(navController, DestinationScreen.Login.route)
-                })
+            Row {
+                Text(text = "Already a user ? Go to ")
+                Text(
+                    text = "Login",
+                    color = Color.Blue,
+                    modifier = Modifier.clickable {
+                        navigateTo(navController, DestinationScreen.Login.route)
+                    })
+            }
         }
-
     }
-    if (vm.inProcess.value){
+
+    if (vm.inProcess.value) {
         CommonProcessBar()
 
     }

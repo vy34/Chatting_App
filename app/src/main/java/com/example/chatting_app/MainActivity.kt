@@ -17,6 +17,7 @@ import com.example.chatting_app.Screens.LoginScreen
 import com.example.chatting_app.Screens.ProfileScreen
 import com.example.chatting_app.Screens.SignUpScreen
 import com.example.chatting_app.Screens.SingleChatScreen
+import com.example.chatting_app.Screens.SingleStatusScreen
 import com.example.chatting_app.Screens.StatusScreen
 import com.example.chatting_app.ui.theme.Chatting_AppTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -82,6 +83,12 @@ class MainActivity : ComponentActivity() {
             }
             composable(DestinationScreen.Profile.route){
                 ProfileScreen(navController = navController,vm = vm)
+            }
+            composable(DestinationScreen.SingleStatus.route){
+                val userId = it.arguments?.getString("userId")
+                userId?.let {
+                SingleStatusScreen(navController = navController,vm = vm, userId = it)
+                }
             }
 
         }
