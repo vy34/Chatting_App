@@ -44,14 +44,15 @@ fun SingleChatScreen(navController: NavController, vm: LCViewModel, chatId: Stri
         mutableStateOf("")
     }
 
-    val onSendReply =  {
+    val onSendReply = {
         vm.onSendReply(chatId, reply)
-        reply=""
+        reply = ""
     }
     var chatMessage = vm.chatMessages
     val myUser = vm.userData.value
-    var currentChat = vm.chats.value.first{it.chatId == chatId}
-    val chatUser = if (myUser?.userId == currentChat.user1.userId) currentChat.user2 else currentChat.user1
+    var currentChat = vm.chats.value.first { it.chatId == chatId }
+    val chatUser =
+        if (myUser?.userId == currentChat.user1.userId) currentChat.user2 else currentChat.user1
 
     LaunchedEffect(key1 = Unit) {
         vm.populateMessages(chatId)
@@ -59,49 +60,67 @@ fun SingleChatScreen(navController: NavController, vm: LCViewModel, chatId: Stri
     BackHandler {
         vm.depopulateMessage()
     }
-Column {
-    ChatHeader(name = chatUser.name?:"", imageUrl = chatUser.imageUrl?:"" ) {
-        navController.popBackStack()
-        vm.depopulateMessage()
+    Column {
+        ChatHeader(name = chatUser.name ?: "", imageUrl = chatUser.imageUrl ?: "") {
+            navController.popBackStack()
+            vm.depopulateMessage()
+        }
+        MessageBox(
+            modifier = Modifier.weight(1f),
+            chatMessages = chatMessage.value,
+            currentUserId = myUser?.userId ?: ""
+        )
+        ReplyBox(reply = reply, onReplyChange = { reply = it }, onSendReply = onSendReply)
     }
-    MessageBox(modifier = Modifier.weight(1f), chatMessages = chatMessage.value, currentUserId = myUser?.userId?:"")
-    ReplyBox(reply = reply, onReplyChange = {reply = it}, onSendReply = onSendReply)
-}
 }
 
 @Composable
-fun MessageBox(modifier: Modifier, chatMessages: List<Message>, currentUserId: String){
+fun MessageBox(modifier: Modifier, chatMessages: List<Message>, currentUserId: String) {
 
-    LazyColumn(modifier = Modifier) {
-    items(chatMessages){
-        msg->
-        val alignment= if(msg.sendBy==currentUserId) Alignment.End else Alignment.Start
-        val color = if(msg.sendBy==currentUserId) Color(0xFF68C400) else Color(0xFFC0C0C0)
-        Column(modifier = Modifier.fillMaxWidth().padding(8.dp), horizontalAlignment = alignment) {
-            Text(text = msg.message?:"", modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(color).padding(12.dp),
-                color = Color.White,
-                fontWeight = FontWeight.Bold)
+    LazyColumn(modifier = modifier) {
+        items(chatMessages) { msg ->
+            val alignment = if (msg.sendBy == currentUserId) Alignment.End else Alignment.Start
+            val color = if (msg.sendBy == currentUserId) Color(0xFF68C400) else Color(0xFFC0C0C0)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                horizontalAlignment = alignment
+            ) {
+                Text(
+                    text = msg.message ?: "",
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(color)
+                        .padding(12.dp),
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
-    }
 
 }
+
 @Composable
-fun ChatHeader(name: String, imageUrl : String, onBackClicked:() -> Unit){
-    Row (modifier = Modifier
-        .fillMaxWidth()
-        .wrapContentHeight(),
+fun ChatHeader(name: String, imageUrl: String, onBackClicked: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight(),
         verticalAlignment = Alignment.CenterVertically
-            ){
-            Icon(Icons.Rounded.ArrowBack, contentDescription = null, modifier = Modifier
-                .clickable {
-                    onBackClicked.invoke()
-                }
-                .padding(8.dp))
-        CommonImage(data = imageUrl, modifier = Modifier
-            .padding(8.dp)
-            .size(50.dp)
-            .clip(CircleShape))
+    ) {
+        Icon(Icons.Rounded.ArrowBack, contentDescription = null, modifier = Modifier
+            .clickable {
+                onBackClicked.invoke()
+            }
+            .padding(8.dp))
+        CommonImage(
+            data = imageUrl, modifier = Modifier
+                .padding(8.dp)
+                .size(50.dp)
+                .clip(CircleShape)
+        )
         Text(text = name, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 4.dp))
     }
 }
@@ -125,6 +144,5 @@ fun ReplyBox(reply: String, onReplyChange: (String) -> Unit, onSendReply: () -> 
                 Text(text = "Send")
             }
         }
-
     }
 }
