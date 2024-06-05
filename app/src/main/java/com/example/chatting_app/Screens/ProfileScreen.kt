@@ -30,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.chatting_app.CommonDivider
@@ -42,6 +43,7 @@ import com.example.chatting_app.navigateTo
 @Composable
 fun ProfileScreen(navController: NavController, vm: LCViewModel) {
     val inProgress=vm.inProcess.value
+    val context = LocalContext.current
     if (inProgress){
         CommonProcessBar()
     }else{
@@ -67,7 +69,7 @@ fun ProfileScreen(navController: NavController, vm: LCViewModel) {
                          navigateTo(navController = navController, route = DestinationScreen.ChatList.route)
                 },
                 onSave = {
-                         vm.createOrUpdateProfile(name = name, number = number)
+                         vm.createOrUpdateProfile(context,name = name, number = number)
                 },
                 onLogOut = {
                     vm.logout()
@@ -165,10 +167,11 @@ fun ProfileContent(
 
 @Composable
 fun ProfileImage(imageUrl:String?,vm:LCViewModel) {
+    val context = LocalContext.current
     val launcher= rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) {
         uri ->
         uri?.let {
-            vm.uploadProfileImage(uri)
+            vm.uploadProfileImage(context,uri)
         }
     }
     Box (modifier = Modifier.height(intrinsicSize = IntrinsicSize.Min)){

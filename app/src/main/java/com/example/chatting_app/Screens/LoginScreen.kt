@@ -28,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
@@ -47,7 +48,7 @@ import com.example.chatting_app.navigateTo
 
 @Composable
 fun LoginScreen(navController: NavController, vm: LCViewModel) {
-
+    val context = LocalContext.current
     CheckSignedIn(vm = vm, navController = navController)
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -126,6 +127,7 @@ fun LoginScreen(navController: NavController, vm: LCViewModel) {
             )
             Button(onClick = {
                 vm.Login(
+                    context ,
                     emailState.value.text,
                     passwordState.value.text
                 )
