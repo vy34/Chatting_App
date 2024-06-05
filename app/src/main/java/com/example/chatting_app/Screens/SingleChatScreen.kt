@@ -99,7 +99,6 @@ fun MessageBox(modifier: Modifier, chatMessages: List<Message>, currentUserId: S
             }
         }
     }
-
 }
 
 @Composable
