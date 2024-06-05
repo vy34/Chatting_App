@@ -52,7 +52,6 @@ fun CommonProcessBar() {
     ) {
         CircularProgressIndicator()
     }
-
 }
 
 @Composable
@@ -64,7 +63,6 @@ fun CommonDivider() {
             .alpha(0.3f)
             .padding(8.dp, bottom = 8.dp)
     )
-
 }
 
 @Composable

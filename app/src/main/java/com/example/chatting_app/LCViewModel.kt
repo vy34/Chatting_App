@@ -1,9 +1,12 @@
 package com.example.chatting_app
 
+import android.content.Context
 import android.icu.util.Calendar
 import android.net.Uri
 import com.example.chatting_app.Data.Message
 import android.util.Log
+import android.util.Patterns
+import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.ViewModel
@@ -99,20 +102,65 @@ class LCViewModel @Inject constructor(
         }
     }
 
-    fun onSendReply(chatID: String, message: String){
+    fun onSendReply(chatId: String, message: String, imageUri: Uri? = null) {
+        if (imageUri != null) {
+            uploadImage(imageUri, onSuccess = { imageUrl ->
+                sendMessage(chatId, message, imageUrl)
+            }, onFailure = {
+                handleException(it, "Image upload failed")
+            })
+        } else {
+            sendMessage(chatId, message, null)
+        }
+    }
+
+    private fun sendMessage(chatId: String, message: String, imageUrl: String?) {
         val time = Calendar.getInstance().time.toString()
-        val msg =  Message(userData.value?.userId, message, time)
+        val msg = Message(
+            sendBy = userData.value?.userId,
+            message = message,
+            timeStamp = time,
+            imageUrl = imageUrl
+        )
         db.collection(CHATS)
-            .document(chatID)
+            .document(chatId)
             .collection(MESSAGE)
             .document()
             .set(msg)
     }
 
-    fun SignUp(name:String,number: String,email:String,password:String){
+    fun uploadImage(uri: Uri, onSuccess: (String) -> Unit, onFailure: (Exception) -> Unit) {
+        inProcess.value = true
+        val storageRef = storage.reference
+        val uuid = UUID.randomUUID()
+        val imageRef = storageRef.child("images/$uuid")
+        val uploadTask = imageRef.putFile(uri)
+        uploadTask.addOnSuccessListener {
+            val result = it.metadata?.reference?.downloadUrl
+            result?.addOnSuccessListener { downloadUri ->
+                onSuccess(downloadUri.toString())
+                inProcess.value = false
+            }
+        }.addOnFailureListener {
+            onFailure(it)
+            inProcess.value = false
+        }
+    }
+
+    fun isValidEmail(email: String): Boolean {
+        return Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    }
+
+    fun SignUp(context: Context, name:String, number: String, email:String, password:String){
         inProcess.value=true
         if (name.isEmpty()||number.isEmpty() || email.isEmpty()||password.isEmpty()){
-            handleException(customMessage = "Please fill all fields")
+            Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
+            inProcess.value=false
+            return
+        }
+        if (!isValidEmail(email)) {
+            Toast.makeText(context, "Invalid email format", Toast.LENGTH_SHORT).show()
+            inProcess.value = false
             return
         }
         inProcess.value=true
@@ -123,26 +171,31 @@ class LCViewModel @Inject constructor(
                 if (it.isEmpty){
                     auth.createUserWithEmailAndPassword(email,password).addOnCompleteListener {
                         if (it.isSuccessful){
-                            createOrUpdateProfile(name,number)
+                            createOrUpdateProfile(context,name,number)
                             signIn.value=true
                         }else{
-
+                            Toast.makeText(context, "Failed to sign in user", Toast.LENGTH_SHORT).show()
+                            inProcess.value = false
                         }
                     }
                 }
                 else{
-                    handleException(customMessage = "number already exist")
-                    inProcess.value=false
+                    Toast.makeText(context, "Number already exists", Toast.LENGTH_SHORT).show()
+                    inProcess.value = false
                 }
+            }.addOnFailureListener { exception ->
+                Toast.makeText(context, "Failed to check if number exists", Toast.LENGTH_SHORT).show()
+                inProcess.value = false
             }
 
 
     }
 
-    fun Login(email: String,password: String){
+    fun Login(context: Context,email: String,password: String){
 
         if (email.isEmpty()||password.isEmpty()){
-            handleException(customMessage = "Please fill all fields")
+            Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
+            inProcess.value=false
             return
         }else{
             inProcess.value=true
@@ -154,15 +207,16 @@ class LCViewModel @Inject constructor(
                         getUserData(it)
                     }
                 }else{
-
+                    Toast.makeText(context, "gmail or password is incorrect", Toast.LENGTH_SHORT).show()
+                    inProcess.value = false
                 }
             }
         }
     }
 
-    fun uploadProfileImage(uri: Uri){
+    fun uploadProfileImage(context: Context,uri: Uri){
         uploadImage(uri) { downloadUri ->
-            createOrUpdateProfile(imageUrl = downloadUri.toString())
+            createOrUpdateProfile(context,imageUrl = downloadUri.toString())
         }
 
     }
@@ -188,7 +242,7 @@ class LCViewModel @Inject constructor(
 
     }
 
-    fun createOrUpdateProfile(name: String?=null, number: String?=null,imageUrl:String?=null) {
+    fun createOrUpdateProfile(context: Context,name: String?=null, number: String?=null,imageUrl:String?=null) {
         var uid=auth.currentUser?.uid
         val userData=UserData(
             userId = uid,
@@ -207,6 +261,8 @@ class LCViewModel @Inject constructor(
                             getUserData(uid)
                         }.addOnFailureListener {
                             handleException(it, "Failed to update user")
+                           Toast.makeText(context, "Failed to update user", Toast.LENGTH_SHORT).show()
+
                         }
 
                 }else{
@@ -216,7 +272,7 @@ class LCViewModel @Inject constructor(
                 }
             }
                 .addOnFailureListener{
-                    handleException(it,"cannot retrieve user")
+                    Toast.makeText(context, "Cannot retrieve user", Toast.LENGTH_SHORT).show()
                 }
         }
     }
@@ -369,4 +425,6 @@ class LCViewModel @Inject constructor(
             }
         }
     }
+
+
 }
