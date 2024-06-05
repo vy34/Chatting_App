@@ -1,5 +1,6 @@
 package com.example.chatting_app.Screens
 
+import android.annotation.SuppressLint
 import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -23,13 +24,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -49,12 +54,20 @@ import com.example.chatting_app.CommonImage
 import com.example.chatting_app.Data.Message
 import com.example.chatting_app.LCViewModel
 import com.example.chatting_app.R
+import com.example.chatting_app.VoiceToTextParser
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
+import coil.size.Scale
+import coil.size.Size
+
 
 @Composable
-fun SingleChatScreen(navController: NavController, vm: LCViewModel, chatId: String) {
+fun SingleChatScreen(navController: NavController, vm: LCViewModel,voice: VoiceToTextParser, chatId: String) {
     var reply by rememberSaveable {
         mutableStateOf("")
     }
+
+    val voiceToTextParser = remember { voice }
 
     val onSendReply: (String, Uri?) -> Unit = { message, imageUri ->
         vm.onSendReply(chatId, message, imageUri)
@@ -73,6 +86,12 @@ fun SingleChatScreen(navController: NavController, vm: LCViewModel, chatId: Stri
     BackHandler {
         vm.depopulateMessage()
     }
+    // Lắng nghe kết quả từ VoiceToTextParser và cập nhật reply
+    LaunchedEffect(key1 = voiceToTextParser.state.collectAsState().value) {
+        voiceToTextParser.state.value?.spokenText?.let {
+            reply += it
+        }
+    }
     Column {
         ChatHeader(name = chatUser.name ?: "", imageUrl = chatUser.imageUrl ?: "") {
             navController.popBackStack()
@@ -86,8 +105,10 @@ fun SingleChatScreen(navController: NavController, vm: LCViewModel, chatId: Stri
         ReplyBox(
             reply = reply,
             onReplyChange = { reply = it },
-            onSendReply = { message, imageUri -> onSendReply(message, imageUri) }
-        )
+
+            onSendReply = { message, imageUri -> onSendReply(message, imageUri) },
+            onStartListening = { voiceToTextParser.startListening("en-US") }
+        ) { voiceToTextParser.stopListening() }
     }
 }
 
@@ -98,7 +119,6 @@ fun MessageBox(modifier: Modifier, chatMessages: List<Message>, currentUserId: S
         items(chatMessages) { msg ->
             val isCurrentUser = msg.sendBy == currentUserId
             val color = if (isCurrentUser) Color(0xFF68C400) else Color(0xFFC0C0C0)
-
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -154,7 +174,14 @@ fun ChatHeader(name: String, imageUrl: String, onBackClicked: () -> Unit) {
 }
 
 @Composable
-fun ReplyBox(reply: String, onReplyChange: (String) -> Unit, onSendReply: (String, Uri?) -> Unit) {
+fun ReplyBox(
+    reply: String,
+    onReplyChange: (String) -> Unit,
+    onSendReply: (String, Uri?) -> Unit,
+    onStartListening: () -> Unit,
+    onStopListening: () -> Unit
+) {
+
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -165,12 +192,42 @@ fun ReplyBox(reply: String, onReplyChange: (String) -> Unit, onSendReply: (Strin
         modifier = Modifier.fillMaxWidth()
     ) {
         CommonDivider()
+
+//        if (selectedImageUri != null) {
+//            Image(
+//                painter = rememberImagePainter(data = selectedImageUri),
+//                contentDescription = null,
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .height(200.dp)
+//                    .clip(RoundedCornerShape(8.dp))
+//                    .padding(8.dp)
+//            )
+//        }
+        if (selectedImageUri != null) {
+            Image(
+                painter = rememberAsyncImagePainter(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(selectedImageUri)
+                        .size(Size.ORIGINAL) // you can set custom size here
+                        .scale(Scale.FIT)
+                        .build()
+                ),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .padding(8.dp)
+            )
+        }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+
             Box(
                 modifier = Modifier.size(28.dp),
                 contentAlignment = Alignment.Center
@@ -184,18 +241,30 @@ fun ReplyBox(reply: String, onReplyChange: (String) -> Unit, onSendReply: (Strin
                 )
             }
             Spacer(modifier = Modifier.width(8.dp))
+
             TextField(
                 value = reply,
                 onValueChange = onReplyChange,
                 maxLines = 3,
                 modifier = Modifier.weight(1f)
             )
+
             Spacer(modifier = Modifier.width(8.dp))
             Button(
                 onClick = { onSendReply(reply, selectedImageUri) }
             ) {
                 Text(text = "Send")
             }
+
+            Icon(
+                Icons.Default.Send,
+                contentDescription = null,
+                modifier = Modifier.weight(0.2f).size(40.dp).clickable {
+                    onSendReply(reply, selectedImageUri)
+                    selectedImageUri = null
+                }
+            )
+
         }
     }
 }
