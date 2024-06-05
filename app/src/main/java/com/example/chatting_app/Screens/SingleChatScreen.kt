@@ -1,6 +1,5 @@
 package com.example.chatting_app.Screens
 
-import android.app.Application
 import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -9,9 +8,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -25,12 +25,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.rounded.ArrowBack
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -43,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -54,6 +53,10 @@ import com.example.chatting_app.Data.Message
 import com.example.chatting_app.LCViewModel
 import com.example.chatting_app.R
 import com.example.chatting_app.VoiceToTextParser
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
+import coil.size.Scale
+import coil.size.Size
 
 @Composable
 fun SingleChatScreen(
@@ -70,8 +73,8 @@ fun SingleChatScreen(
 
 
 
-    val onSendReply = {
-        vm.onSendReply(chatId, reply)
+    val onSendReply: (String, Uri?) -> Unit = { message, imageUri ->
+        vm.onSendReply(chatId, message, imageUri)
         reply = ""
     }
     var chatMessage = vm.chatMessages
@@ -105,10 +108,10 @@ fun SingleChatScreen(
         ReplyBox(
             reply = reply,
             onReplyChange = { reply = it },
-            onSendReply = onSendReply,
-            onStartListening = { voiceToTextParser.startListening("en-US") },
-            onStopListening = { voiceToTextParser.stopListening() }
-        )    }
+            onSendReply = { message, imageUri -> onSendReply(message, imageUri) },
+            onStartListening = { voiceToTextParser.startListening("en-US") }
+        ) { voiceToTextParser.stopListening() }
+    }
 }
 
 @Composable
@@ -116,33 +119,33 @@ fun MessageBox(modifier: Modifier, chatMessages: List<Message>, currentUserId: S
 
     LazyColumn(modifier = modifier) {
         items(chatMessages) { msg ->
-            val alignment = if (msg.sendBy == currentUserId) Alignment.End else Alignment.Start
-            val color = if (msg.sendBy == currentUserId) Color(0xFF68C400) else Color(0xFFC0C0C0)
-            Column(
+            val isCurrentUser = msg.sendBy == currentUserId
+            val color = if (isCurrentUser) Color(0xFF68C400) else Color(0xFFC0C0C0)
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp),
-                horizontalAlignment = alignment
+                horizontalArrangement = if (isCurrentUser) Arrangement.End else Arrangement.Start
             ) {
-                if(msg.imageUrl!=null){
+                if ((msg.imageUrl != null)) {
                     Image(
                         painter = rememberImagePainter(data = msg.imageUrl),
                         contentDescription = null,
                         modifier = Modifier
-                            .size(150.dp)
+                            .height(200.dp)
                             .clip(RoundedCornerShape(8.dp))
+                            .padding(4.dp)
                     )
                 } else{
-
-                Text(
-                    text = msg.message ?: "",
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(color)
-                        .padding(12.dp),
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
+                    Text(
+                        text = msg.message ?: "",
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(color)
+                            .padding(12.dp),
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }
@@ -178,7 +181,7 @@ fun ChatHeader(name: String, imageUrl: String, onBackClicked: () -> Unit) {
 fun ReplyBox(
     reply: String,
     onReplyChange: (String) -> Unit,
-    onSendReply: () -> Unit,
+    onSendReply: (String, Uri?) -> Unit,
     onStartListening: () -> Unit,
     onStopListening: () -> Unit
 ) {
@@ -192,6 +195,35 @@ fun ReplyBox(
         modifier = Modifier.fillMaxWidth()
     ) {
         CommonDivider()
+
+//        if (selectedImageUri != null) {
+//            Image(
+//                painter = rememberImagePainter(data = selectedImageUri),
+//                contentDescription = null,
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .height(200.dp)
+//                    .clip(RoundedCornerShape(8.dp))
+//                    .padding(8.dp)
+//            )
+//        }
+        if (selectedImageUri != null) {
+            Image(
+                painter = rememberAsyncImagePainter(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(selectedImageUri)
+                        .size(Size.ORIGINAL) // you can set custom size here
+                        .scale(Scale.FIT)
+                        .build()
+                ),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .padding(8.dp)
+            )
+        }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -199,11 +231,22 @@ fun ReplyBox(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Button(onClick = { launcher.launch("image/*") }, modifier = Modifier
-                .height(10.dp)
-                .width(10.dp)) {
-                Icon(painter = painterResource(id = R.drawable.image), contentDescription = "")
+
+            Box(
+                modifier = Modifier.size(28.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.image_search_24),
+                    contentDescription = "",
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clickable { launcher.launch("image/*") }
+                )
             }
+            Spacer(modifier = Modifier.width(8.dp))
+
+
             TextField(
                 value = reply,
                 onValueChange = onReplyChange,
@@ -216,7 +259,10 @@ fun ReplyBox(
             Icon(
                 Icons.Default.Send,
                 contentDescription = null,
-                modifier = Modifier.weight(0.2f).size(40.dp).clickable { onSendReply() }
+                modifier = Modifier.weight(0.2f).size(40.dp).clickable {
+                    onSendReply(reply, selectedImageUri)
+                    selectedImageUri = null
+                }
             )
 
         }
