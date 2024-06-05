@@ -19,6 +19,7 @@ import com.example.chatting_app.Data.STATUS
 import com.example.chatting_app.Data.Status
 import com.example.chatting_app.Data.USER_NODE
 import com.example.chatting_app.Data.UserData
+import com.example.chatting_app.Data.Voice
 import com.google.android.play.integrity.internal.c
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.Filter
@@ -46,6 +47,7 @@ class LCViewModel @Inject constructor(
     val userData= mutableStateOf<UserData?>(null)
     val chats = mutableStateOf<List<ChatData>>(listOf())
     val chatMessages = mutableStateOf<List<Message>>(listOf())
+    val voice= mutableStateOf<Voice?>(null)
     val inProgressChatMessage = mutableStateOf(false)
     var currentChatMessageListener : ListenerRegistration?=null
 

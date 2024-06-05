@@ -1,5 +1,6 @@
 package com.example.chatting_app.Screens
 
+import android.app.Application
 import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -8,10 +9,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,14 +23,17 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,10 +43,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
@@ -53,12 +53,22 @@ import com.example.chatting_app.CommonImage
 import com.example.chatting_app.Data.Message
 import com.example.chatting_app.LCViewModel
 import com.example.chatting_app.R
+import com.example.chatting_app.VoiceToTextParser
 
 @Composable
-fun SingleChatScreen(navController: NavController, vm: LCViewModel, chatId: String) {
+fun SingleChatScreen(
+    navController: NavController,
+    vm: LCViewModel,
+    voice: VoiceToTextParser,
+    chatId: String
+) {
+
     var reply by rememberSaveable {
         mutableStateOf("")
     }
+    val voiceToTextParser = remember { voice }
+
+
 
     val onSendReply = {
         vm.onSendReply(chatId, reply)
@@ -76,6 +86,12 @@ fun SingleChatScreen(navController: NavController, vm: LCViewModel, chatId: Stri
     BackHandler {
         vm.depopulateMessage()
     }
+    // Lắng nghe kết quả từ VoiceToTextParser và cập nhật reply
+    LaunchedEffect(key1 = voiceToTextParser.state.collectAsState().value) {
+        voiceToTextParser.state.value?.spokenText?.let {
+            reply += it
+        }
+    }
     Column {
         ChatHeader(name = chatUser.name ?: "", imageUrl = chatUser.imageUrl ?: "") {
             navController.popBackStack()
@@ -86,8 +102,13 @@ fun SingleChatScreen(navController: NavController, vm: LCViewModel, chatId: Stri
             chatMessages = chatMessage.value,
             currentUserId = myUser?.userId ?: ""
         )
-        ReplyBox(reply = reply, onReplyChange = { reply = it }, onSendReply = onSendReply)
-    }
+        ReplyBox(
+            reply = reply,
+            onReplyChange = { reply = it },
+            onSendReply = onSendReply,
+            onStartListening = { voiceToTextParser.startListening("en-US") },
+            onStopListening = { voiceToTextParser.stopListening() }
+        )    }
 }
 
 @Composable
@@ -152,8 +173,15 @@ fun ChatHeader(name: String, imageUrl: String, onBackClicked: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ReplyBox(reply: String, onReplyChange: (String) -> Unit, onSendReply: () -> Unit) {
+fun ReplyBox(
+    reply: String,
+    onReplyChange: (String) -> Unit,
+    onSendReply: () -> Unit,
+    onStartListening: () -> Unit,
+    onStopListening: () -> Unit
+) {
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -168,17 +196,29 @@ fun ReplyBox(reply: String, onReplyChange: (String) -> Unit, onSendReply: () -> 
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Button(onClick = { launcher.launch("image/*") }, modifier = Modifier.height(10.dp).width(10.dp)) {
+            Button(onClick = { launcher.launch("image/*") }, modifier = Modifier
+                .height(10.dp)
+                .width(10.dp)) {
                 Icon(painter = painterResource(id = R.drawable.image), contentDescription = "")
             }
-            TextField(value = reply, onValueChange = onReplyChange, maxLines = 3)
-            Button(
-                onClick = onSendReply
-            ) {
-                Text(text = "Send")
-            }
+            TextField(
+                value = reply,
+                onValueChange = onReplyChange,
+                maxLines = 5,
+                modifier = Modifier
+                    .weight(0.8f)
+                    .padding(end = 8.dp)
+                    .clip(RoundedCornerShape(8.dp))
+            )
+            Icon(
+                Icons.Default.Send,
+                contentDescription = null,
+                modifier = Modifier.weight(0.2f).size(40.dp).clickable { onSendReply() }
+            )
+
         }
     }
 }

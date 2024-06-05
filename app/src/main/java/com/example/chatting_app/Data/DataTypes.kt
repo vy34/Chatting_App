@@ -39,3 +39,9 @@ data class Status(
     val imageUrl: String?="",
     val timeStamp: Long?=null
 )
+
+data class Voice(
+    val spokenText:String="",
+    val isSpeaking:Boolean=false,
+    val error:String?=null
+)
