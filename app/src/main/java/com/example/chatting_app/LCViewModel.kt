@@ -102,15 +102,51 @@ class LCViewModel @Inject constructor(
         }
     }
 
-    fun onSendReply(chatID: String, message: String){
+    fun onSendReply(chatId: String, message: String, imageUri: Uri? = null) {
+        if (imageUri != null) {
+            uploadImage(imageUri, onSuccess = { imageUrl ->
+                sendMessage(chatId, message, imageUrl)
+            }, onFailure = {
+                handleException(it, "Image upload failed")
+            })
+        } else {
+            sendMessage(chatId, message, null)
+        }
+    }
+
+    private fun sendMessage(chatId: String, message: String, imageUrl: String?) {
         val time = Calendar.getInstance().time.toString()
-        val msg =  Message(userData.value?.userId, message, time)
+        val msg = Message(
+            sendBy = userData.value?.userId,
+            message = message,
+            timeStamp = time,
+            imageUrl = imageUrl
+        )
         db.collection(CHATS)
-            .document(chatID)
+            .document(chatId)
             .collection(MESSAGE)
             .document()
             .set(msg)
     }
+
+    fun uploadImage(uri: Uri, onSuccess: (String) -> Unit, onFailure: (Exception) -> Unit) {
+        inProcess.value = true
+        val storageRef = storage.reference
+        val uuid = UUID.randomUUID()
+        val imageRef = storageRef.child("images/$uuid")
+        val uploadTask = imageRef.putFile(uri)
+        uploadTask.addOnSuccessListener {
+            val result = it.metadata?.reference?.downloadUrl
+            result?.addOnSuccessListener { downloadUri ->
+                onSuccess(downloadUri.toString())
+                inProcess.value = false
+            }
+        }.addOnFailureListener {
+            onFailure(it)
+            inProcess.value = false
+        }
+    }
+
     fun isValidEmail(email: String): Boolean {
         return Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
