@@ -3,7 +3,6 @@ package com.example.chatting_app.Screens
 import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -13,8 +12,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -28,7 +25,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -43,10 +39,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
@@ -99,40 +93,6 @@ fun SingleChatScreen(navController: NavController, vm: LCViewModel, chatId: Stri
 
 @Composable
 fun MessageBox(modifier: Modifier, chatMessages: List<Message>, currentUserId: String) {
-
-//    LazyColumn(modifier = modifier) {
-//        items(chatMessages) { msg ->
-//            val alignment = if (msg.sendBy == currentUserId) Alignment.End else Alignment.Start
-//            val color = if (msg.sendBy == currentUserId) Color(0xFF68C400) else Color(0xFFC0C0C0)
-//            Column(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(8.dp),
-//                horizontalAlignment = alignment
-//            ) {
-//                if (msg.imageUrl != null) {
-//                    Image(
-//                        painter = rememberImagePainter(data = msg.imageUrl),
-//                        contentDescription = null,
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .height(200.dp)
-//                            .align(if (msg.sendBy == currentUserId) Alignment.End else Alignment.Start)
-//                    )
-//                } else {
-//                    Text(
-//                        text = msg.message ?: "",
-//                        modifier = Modifier
-//                            .clip(RoundedCornerShape(8.dp))
-//                            .background(color)
-//                            .padding(12.dp),
-//                        color = Color.White,
-//                        fontWeight = FontWeight.Bold
-//                    )
-//                }
-//            }
-//        }
-//    }
 
     LazyColumn(modifier = modifier) {
         items(chatMessages) { msg ->
