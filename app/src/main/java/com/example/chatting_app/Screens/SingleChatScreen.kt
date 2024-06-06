@@ -2,12 +2,16 @@ package com.example.chatting_app.Screens
 
 import android.annotation.SuppressLint
 import android.net.Uri
+import android.view.MotionEvent
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +19,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -25,6 +30,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.Button
@@ -42,13 +48,18 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
 import com.example.chatting_app.CommonDivider
@@ -71,9 +82,14 @@ fun SingleChatScreen(navController: NavController, vm: LCViewModel,voice: VoiceT
     }
 
     val voiceToTextParser = remember { voice }
+<<<<<<< HEAD
+=======
+    val context = LocalContext.current
+
+>>>>>>> 627e5834f297108fe0e3bdcfa1ea49bf521b57e4
 
     val onSendReply: (String, Uri?) -> Unit = { message, imageUri ->
-        vm.onSendReply(chatId, message, imageUri)
+        vm.onSendReply(context,chatId, message, imageUri)
         reply = ""
     }
 
@@ -103,7 +119,8 @@ fun SingleChatScreen(navController: NavController, vm: LCViewModel,voice: VoiceT
         MessageBox(
             modifier = Modifier.weight(1f),
             chatMessages = chatMessage.value,
-            currentUserId = myUser?.userId ?: ""
+            currentUserId = myUser?.userId ?: "",
+            onDeleteMessage ={messageId -> vm.deleteMessage(chatId,messageId)}
         )
         ReplyBox(
             reply = reply,
@@ -115,10 +132,21 @@ fun SingleChatScreen(navController: NavController, vm: LCViewModel,voice: VoiceT
     }
 }
 
+
+
 @Composable
+<<<<<<< HEAD
 fun MessageBox(modifier: Modifier, chatMessages: List<Message>, currentUserId: String) {
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
+=======
+fun MessageBox(
+    modifier: Modifier,
+    chatMessages: List<Message>,
+    currentUserId: String,
+    onDeleteMessage: (String) -> Unit
+) {
+>>>>>>> 627e5834f297108fe0e3bdcfa1ea49bf521b57e4
 
     LaunchedEffect(chatMessages.size) {
         if (chatMessages.isNotEmpty()) {
@@ -132,26 +160,57 @@ fun MessageBox(modifier: Modifier, chatMessages: List<Message>, currentUserId: S
         state = listState
     ) {
         items(chatMessages) { msg ->
-            val isCurrentUser = msg.sendBy == currentUserId
-            val color = if (isCurrentUser) Color(0xFF68C400) else Color(0xFFC0C0C0)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                horizontalArrangement = if (isCurrentUser) Arrangement.End else Arrangement.Start
-            ) {
-                if ((msg.imageUrl != null)) {
-                    Image(
-                        painter = rememberImagePainter(data = msg.imageUrl),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .height(200.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .padding(4.dp)
+            MessageItem(message=msg,currentUserId = currentUserId,onDeleteMessage = onDeleteMessage)
+        }
+    }
+
+}
+    @OptIn(ExperimentalComposeUiApi::class)
+    @Composable
+    fun MessageItem(message: Message, currentUserId: String, onDeleteMessage: (String) -> Unit) {
+        val isCurrentUser = message.sendBy == currentUserId
+        var isMessageLongPressed by remember { mutableStateOf(false) }
+        val color = if (isCurrentUser) Color(0xFF68C400) else Color(0xFFC0C0C0)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onLongPress = { isMessageLongPressed = true },
+                        onPress = { isMessageLongPressed = false }
                     )
-                } else{
+                },
+
+            horizontalArrangement = if (isCurrentUser) Arrangement.End else Arrangement.Start
+        ) {
+
+            if (isMessageLongPressed && isCurrentUser && !message.deleted) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Delete Message",
+                    modifier = Modifier
+                        .padding(end = 10.dp)
+                        .offset(y=8.dp)
+                        .clickable { onDeleteMessage(message.messageId ?: "") }
+                )
+            }
+
+            if (message.deleted) {
+                Text(
+                    text = "This message was deleted",
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .border(width = 1.dp, color = Color.Gray, shape = RoundedCornerShape(8.dp))
+                        .padding(8.dp),
+                    color = Color.Gray,
+                    fontStyle = FontStyle.Italic,
+                    fontSize = 12.sp
+                )
+            } else {
+                if (!message.message.isNullOrEmpty()) {
                     Text(
-                        text = msg.message ?: "",
+                        text = message.message,
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
                             .background(color)
@@ -160,10 +219,24 @@ fun MessageBox(modifier: Modifier, chatMessages: List<Message>, currentUserId: S
                         fontWeight = FontWeight.Bold
                     )
                 }
+                if (!message.imageUrl.isNullOrEmpty()) {
+                    Image(
+                        painter = rememberImagePainter(data = message.imageUrl),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .height(200.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .padding(4.dp)
+                    )
+                }
             }
+
         }
     }
+<<<<<<< HEAD
 }
+=======
+>>>>>>> 627e5834f297108fe0e3bdcfa1ea49bf521b57e4
 
 @Composable
 fun ChatHeader(name: String, imageUrl: String, onBackClicked: () -> Unit) {
@@ -198,6 +271,8 @@ fun ReplyBox(
 ) {
 
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var showToast by remember { mutableStateOf(false) }
+    val context = LocalContext.current
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -213,7 +288,7 @@ fun ReplyBox(
                 painter = rememberAsyncImagePainter(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(selectedImageUri)
-                        .size(Size.ORIGINAL) // you can set custom size here
+                        .size(Size.ORIGINAL)
                         .scale(Scale.FIT)
                         .build()
                 ),
@@ -261,10 +336,28 @@ fun ReplyBox(
                     .weight(0.2f)
                     .size(40.dp)
                     .clickable {
+<<<<<<< HEAD
                         onSendReply(reply, selectedImageUri)
                         selectedImageUri = null
+=======
+                        if (reply.isNotBlank() || selectedImageUri != null) {
+                            onSendReply(reply, selectedImageUri)
+                            selectedImageUri = null
+                            onReplyChange("") // Đặt lại giá trị tin nhắn
+                            showToast = false
+                        } else {
+                            showToast = true
+                        }
+>>>>>>> 627e5834f297108fe0e3bdcfa1ea49bf521b57e4
                     }
             )
+        }
+        // Hiển thị thông báo Toast khi cần
+        if (showToast) {
+            LaunchedEffect(showToast) {
+                Toast.makeText(context, "Please enter a message or select an image", Toast.LENGTH_SHORT).show()
+                showToast = false
+            }
         }
     }
 }
