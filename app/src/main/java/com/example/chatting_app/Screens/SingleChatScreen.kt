@@ -1,6 +1,7 @@
 package com.example.chatting_app.Screens
 
 import android.net.Uri
+import android.util.Log
 import android.view.MotionEvent
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -25,6 +26,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -41,6 +43,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -68,6 +71,7 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.size.Scale
 import coil.size.Size
+import kotlinx.coroutines.launch
 
 @Composable
 fun SingleChatScreen(
@@ -136,81 +140,92 @@ fun MessageBox(
     onDeleteMessage: (String) -> Unit
 ) {
 
-    LazyColumn(modifier = modifier) {
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(chatMessages.size) {
+        if (chatMessages.isNotEmpty()) {
+            coroutineScope.launch {
+                listState.animateScrollToItem(chatMessages.size - 1)
+            }
+        }
+    }
+    LazyColumn(modifier = modifier, state = listState) {
         items(chatMessages) { msg ->
             MessageItem(message=msg,currentUserId = currentUserId,onDeleteMessage = onDeleteMessage)
         }
     }
 
 }
-    @OptIn(ExperimentalComposeUiApi::class)
-    @Composable
-    fun MessageItem(message: Message, currentUserId: String, onDeleteMessage: (String) -> Unit) {
-        val isCurrentUser = message.sendBy == currentUserId
-        var isMessageLongPressed by remember { mutableStateOf(false) }
-        val color = if (isCurrentUser) Color(0xFF68C400) else Color(0xFFC0C0C0)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
-                .pointerInput(Unit) {
-                    detectTapGestures(
-                        onLongPress = { isMessageLongPressed = true },
-                        onPress = { isMessageLongPressed = false }
-                    )
-                },
-
-            horizontalArrangement = if (isCurrentUser) Arrangement.End else Arrangement.Start
-        ) {
-
-            if (isMessageLongPressed && isCurrentUser && !message.deleted) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete Message",
-                    modifier = Modifier
-                        .padding(end = 10.dp)
-                        .offset(y=8.dp)
-                        .clickable { onDeleteMessage(message.messageId ?: "") }
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+fun MessageItem(message: Message, currentUserId: String, onDeleteMessage: (String) -> Unit) {
+    val isCurrentUser = message.sendBy == currentUserId
+    var isMessageLongPressed by remember { mutableStateOf(false) }
+    val color = if (isCurrentUser) Color(0xFF68C400) else Color(0xFFC0C0C0)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onLongPress = { isMessageLongPressed = true },
+                    onPress = { isMessageLongPressed = false }
                 )
-            }
+            },
 
-            if (message.deleted) {
-                Text(
-                    text = "This message was deleted",
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .border(width = 1.dp, color = Color.Gray, shape = RoundedCornerShape(8.dp))
-                        .padding(8.dp),
-                    color = Color.Gray,
-                    fontStyle = FontStyle.Italic,
-                    fontSize = 12.sp
-                )
-            } else {
-                if (!message.message.isNullOrEmpty()) {
-                    Text(
-                        text = message.message,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(color)
-                            .padding(12.dp),
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                if (!message.imageUrl.isNullOrEmpty()) {
-                    Image(
-                        painter = rememberImagePainter(data = message.imageUrl),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .height(200.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .padding(4.dp)
-                    )
-                }
-            }
+        horizontalArrangement = if (isCurrentUser) Arrangement.End else Arrangement.Start
+    ) {
+
+        if (isMessageLongPressed && isCurrentUser && !message.deleted) {
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = "Delete Message",
+                modifier = Modifier
+                    .padding(end = 10.dp)
+                    .offset(y=8.dp)
+                    .clickable { onDeleteMessage(message.messageId ?: "") }
+            )
 
         }
+
+        if (message.deleted) {
+            Text(
+                text = "This message was deleted",
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .border(width = 1.dp, color = Color.Gray, shape = RoundedCornerShape(8.dp))
+                    .padding(8.dp),
+                color = Color.Gray,
+                fontStyle = FontStyle.Italic,
+                fontSize = 12.sp
+            )
+        } else {
+            if (!message.message.isNullOrEmpty()) {
+                Text(
+                    text = message.message,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(color)
+                        .padding(12.dp),
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            if (!message.imageUrl.isNullOrEmpty()) {
+                Image(
+                    painter = rememberImagePainter(data = message.imageUrl),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .height(200.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .padding(4.dp)
+                )
+            }
+        }
+
     }
+}
 
 @Composable
 fun ChatHeader(name: String, imageUrl: String, onBackClicked: () -> Unit) {
@@ -317,7 +332,7 @@ fun ReplyBox(
                         if (reply.isNotBlank() || selectedImageUri != null) {
                             onSendReply(reply, selectedImageUri)
                             selectedImageUri = null
-                            onReplyChange("") // Đặt lại giá trị tin nhắn
+                            onReplyChange("")
                             showToast = false
                         } else {
                             showToast = true
@@ -326,10 +341,17 @@ fun ReplyBox(
             )
 
         }
-        // Hiển thị thông báo Toast khi cần
+
         if (showToast) {
             LaunchedEffect(showToast) {
                 Toast.makeText(context, "Please enter a message or select an image", Toast.LENGTH_SHORT).show()
+                showToast = false
+            }
+        }
+
+        if (showToast) {
+            LaunchedEffect(showToast) {
+                Toast.makeText(context, "Please enter ", Toast.LENGTH_SHORT).show()
                 showToast = false
             }
         }
