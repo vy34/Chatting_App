@@ -1,6 +1,7 @@
 package com.example.chatting_app.Screens
 
-import android.R
+import android.annotation.SuppressLint
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -32,6 +33,7 @@ import com.example.chatting_app.LCViewModel
 import com.example.chatting_app.TitleText
 import com.example.chatting_app.navigateTo
 
+@SuppressLint("SuspiciousIndentation")
 @Composable
 fun StatusScreen(navController: NavController, vm: LCViewModel) {
   val inProcess = vm.inProgressStatus.value
@@ -39,6 +41,7 @@ fun StatusScreen(navController: NavController, vm: LCViewModel) {
         CommonProcessBar()
     }else{
         val statuses = vm.status.value
+        Log.d("StatusScreen", "Number of statuses: ${statuses.size}")
         val userData = vm.userData.value
 
         val myStatuses = statuses.filter {
@@ -70,7 +73,7 @@ fun StatusScreen(navController: NavController, vm: LCViewModel) {
                     TitleText(txt = "Status")
                     if (statuses.isEmpty()){
                         Column(modifier = Modifier
-                            .fillMaxWidth()
+                            .fillMaxSize()
                             .weight(1f),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
@@ -85,6 +88,25 @@ fun StatusScreen(navController: NavController, vm: LCViewModel) {
                             ) {
                                 navigateTo(navController= navController,
                                     DestinationScreen.SingleStatus.createRoute(myStatuses[0].user.userId!!))
+                            }
+                            CommonDivider()
+                            val uniqueUsers = otherStatuses.map { it.user }.toSet().toList()
+                            LazyColumn(modifier = Modifier.weight(1f)) {
+                                items(uniqueUsers){
+                                        user ->
+                                    CommonRow(imageUrl = user.imageUrl, name = user.name){
+                                        navigateTo(navController = navController, DestinationScreen.SingleStatus.createRoute(user.userId!!)
+                                        )
+                                    }
+                                }
+                            }
+                        } else if (otherStatuses.isNotEmpty()){
+                            CommonRow(
+                                imageUrl = otherStatuses[0].user.imageUrl,
+                                name = otherStatuses[0].user.name
+                            ) {
+                                navigateTo(navController= navController,
+                                    DestinationScreen.SingleStatus.createRoute(otherStatuses[0].user.userId!!))
                             }
                             CommonDivider()
                             val uniqueUsers = otherStatuses.map { it.user }.toSet().toList()

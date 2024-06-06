@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -37,6 +38,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -59,6 +61,7 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.size.Scale
 import coil.size.Size
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -114,8 +117,20 @@ fun SingleChatScreen(navController: NavController, vm: LCViewModel,voice: VoiceT
 
 @Composable
 fun MessageBox(modifier: Modifier, chatMessages: List<Message>, currentUserId: String) {
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
 
-    LazyColumn(modifier = modifier) {
+    LaunchedEffect(chatMessages.size) {
+        if (chatMessages.isNotEmpty()) {
+            coroutineScope.launch {
+                listState.animateScrollToItem(chatMessages.size - 1)
+            }
+        }
+    }
+    LazyColumn(
+        modifier = modifier,
+        state = listState
+    ) {
         items(chatMessages) { msg ->
             val isCurrentUser = msg.sendBy == currentUserId
             val color = if (isCurrentUser) Color(0xFF68C400) else Color(0xFFC0C0C0)
@@ -193,17 +208,6 @@ fun ReplyBox(
     ) {
         CommonDivider()
 
-//        if (selectedImageUri != null) {
-//            Image(
-//                painter = rememberImagePainter(data = selectedImageUri),
-//                contentDescription = null,
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .height(200.dp)
-//                    .clip(RoundedCornerShape(8.dp))
-//                    .padding(8.dp)
-//            )
-//        }
         if (selectedImageUri != null) {
             Image(
                 painter = rememberAsyncImagePainter(
@@ -250,21 +254,17 @@ fun ReplyBox(
             )
 
             Spacer(modifier = Modifier.width(8.dp))
-            Button(
-                onClick = { onSendReply(reply, selectedImageUri) }
-            ) {
-                Text(text = "Send")
-            }
-
             Icon(
                 Icons.Default.Send,
                 contentDescription = null,
-                modifier = Modifier.weight(0.2f).size(40.dp).clickable {
-                    onSendReply(reply, selectedImageUri)
-                    selectedImageUri = null
-                }
+                modifier = Modifier
+                    .weight(0.2f)
+                    .size(40.dp)
+                    .clickable {
+                        onSendReply(reply, selectedImageUri)
+                        selectedImageUri = null
+                    }
             )
-
         }
     }
 }
