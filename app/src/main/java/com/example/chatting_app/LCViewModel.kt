@@ -504,7 +504,7 @@ class LCViewModel @Inject constructor(
             }
         }
     }
-
+// change1
     fun uploadStatus(uri: Uri) {
         uploadImage(uri){
         createStatus(it.toString())
