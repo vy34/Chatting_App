@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.chatting_app"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -49,6 +49,14 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "META-INF/DEPENDENCIES"
+            excludes += "META-INF/DEPENDENCIES.txt"
+            excludes += "META-INF/LICENSE"
+            excludes += "META-INF/LICENSE.txt"
+            excludes += "META-INF/license.txt"
+            excludes += "META-INF/NOTICE"
+            excludes += "META-INF/NOTICE.txt"
+            excludes += "META-INF/notice.txt"
         }
     }
 }
@@ -67,6 +75,7 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.storage)
     implementation(libs.firebase.database.ktx)
+    implementation(libs.firebase.messaging.ktx)
     //  implementation(libs.androidx.ui.desktop)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -97,9 +106,16 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended:1.6.7")
 
 //    //voice
-    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation ("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.11.0")
     implementation ("com.squareup.okhttp3:okhttp:4.12.0")
     implementation ("com.squareup.okhttp3:logging-interceptor:4.9.0")
+
+
+    // Notification
+    implementation ("com.google.code.gson:gson:2.8.6")
+    implementation ("com.google.auth:google-auth-library-oauth2-http:1.7.0")
+    implementation ("com.google.auth:google-auth-library-credentials:1.7.0")
+    
 
 }

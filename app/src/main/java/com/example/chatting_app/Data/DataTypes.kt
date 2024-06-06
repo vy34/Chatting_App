@@ -5,6 +5,7 @@ data class UserData(
     var name:String?=null,
     var number:String?=null,
     var imageUrl:String?=null,
+    val fcmToken: String? = "",
 ){
     fun toMap()= mapOf(
         "userId" to userId,
@@ -25,6 +26,8 @@ data class ChatUser(
     val name: String? = "",
     val number: String? = "",
     val imageUrl: String? = "",
+    val fcmToken: String? = "",
+
 )
 
 data class Message(

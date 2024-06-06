@@ -9,6 +9,8 @@ import android.util.Patterns
 import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.LocalContext
+//import androidx.compose.ui.tooling.data.EmptyGroup.data
+//import androidx.compose.ui.tooling.data.EmptyGroup.data
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.ViewModel
 import com.example.chatting_app.Data.CHATS
@@ -21,25 +23,52 @@ import com.example.chatting_app.Data.Status
 import com.example.chatting_app.Data.USER_NODE
 import com.example.chatting_app.Data.UserData
 import com.example.chatting_app.Data.Voice
-import com.google.android.play.integrity.internal.c
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.toObjects
 import com.google.firebase.firestore.toObject
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.storage.FirebaseStorage
+import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.lang.Exception
 import java.util.UUID
 import javax.inject.Inject
+
+data class FCMMessage(
+    val message: com.example.chatting_app.Message
+)
+
+data class Message(
+    val token: String,
+    val notification: Notification
+)
+
+data class Notification(
+    val title: String,
+    val body: String
+)
 
 @HiltViewModel
 class LCViewModel @Inject constructor(
     val auth:FirebaseAuth,
     var db:FirebaseFirestore,
-    var storage:FirebaseStorage
+    var storage:FirebaseStorage,
+    @ApplicationContext private val applicationContext: Context
+
 ) :ViewModel(){
 
     var inProcess = mutableStateOf(false)
@@ -143,6 +172,70 @@ class LCViewModel @Inject constructor(
             .collection(MESSAGE)
             .document(messageId)
             .set(msg)
+        sendNotification( applicationContext,msg.message,chatId)
+    }
+
+
+    private fun sendNotification( context: Context,message: String?, chatId: String) {
+
+
+        val chat = chats.value.find { it.chatId == chatId }
+
+
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val resources = context.resources
+                    val rawId = resources.getIdentifier("service_account", "raw", context.packageName)
+                    val inputStream = resources.openRawResource(rawId)
+                    val googleCredentials = GoogleCredentials.fromStream(inputStream)
+                        .createScoped(listOf("https://www.googleapis.com/auth/cloud-platform"))
+                    googleCredentials.refreshIfExpired()
+
+                    val client = OkHttpClient()
+                    val gson = Gson()
+
+                    val notification = Notification(
+                        title = "New Message",
+                        body = message!!
+                    )
+
+                    val fcmMessage = FCMMessage(
+                        message = Message(
+                            token = chat!!.user2.fcmToken!!,
+                            notification = notification
+                        )
+                    )
+
+                    val json = gson.toJson(fcmMessage)
+                    val body = json.toRequestBody("application/json; charset=utf-8".toMediaType())
+
+                    val request = Request.Builder()
+                        .url("https://fcm.googleapis.com/v1/projects/chatting-app-668f4/messages:send")
+                        .addHeader("Authorization", "Bearer ${googleCredentials.accessToken.tokenValue}")
+                        .post(body)
+                        .build()
+
+                    val response = client.newCall(request).execute()
+                    withContext(Dispatchers.Main) {
+                        if (!response.isSuccessful) {
+                            Toast.makeText(context, "Token: ${chat.user2.fcmToken}", Toast.LENGTH_SHORT).show()
+
+                            Log.d("Notification", "Unexpected code $response")
+                        } else {
+                            Log.d("Notification", "Notification sent successfully")
+                            Log.d("Notification", "Token: ${chat.user2.fcmToken}")
+                            Log.d("Notification", "Title: ${notification.title}")
+                            Log.d("Notification", "Body: ${notification.body}")
+                        }
+                    }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Log.e("Notification", "Failed to send notification", e)
+                    }
+                }
+            }
+
+
     }
 
     fun deleteMessage(chatId: String, messageId: String) {
@@ -188,6 +281,7 @@ class LCViewModel @Inject constructor(
     }
 
     fun SignUp(context: Context, name:String, number: String, email:String, password:String){
+
         inProcess.value=true
         if (name.isEmpty()||number.isEmpty() || email.isEmpty()||password.isEmpty()){
             Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
@@ -223,8 +317,6 @@ class LCViewModel @Inject constructor(
                 Toast.makeText(context, "Failed to check if number exists", Toast.LENGTH_SHORT).show()
                 inProcess.value = false
             }
-
-
     }
 
     fun Login(context: Context,email: String,password: String){
@@ -279,38 +371,47 @@ class LCViewModel @Inject constructor(
     }
 
     fun createOrUpdateProfile(context: Context,name: String?=null, number: String?=null,imageUrl:String?=null) {
-        var uid=auth.currentUser?.uid
-        val userData=UserData(
-            userId = uid,
-            name=name?:userData.value?.name,
-            number=number?:userData.value?.number,
-            imageUrl=imageUrl?:userData.value?.imageUrl
-        )
-        uid?.let {
-            inProcess.value=true
-            db.collection(USER_NODE).document(uid).get().addOnSuccessListener {
-                if (it.exists()){
-                    //update user data
-                    db.collection(USER_NODE).document(uid).update(userData.toMap())
-                        .addOnSuccessListener {
-                            inProcess.value = false
-                            getUserData(uid)
-                        }.addOnFailureListener {
-                            handleException(it, "Failed to update user")
-                           Toast.makeText(context, "Failed to update user", Toast.LENGTH_SHORT).show()
-
-                        }
-
-                }else{
-                    db.collection(USER_NODE).document(uid).set(userData)
-                    inProcess.value=false
-                    getUserData(uid)
-                }
+        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                return@OnCompleteListener
             }
-                .addOnFailureListener{
-                    Toast.makeText(context, "Cannot retrieve user", Toast.LENGTH_SHORT).show()
+            // Get new FCM registration token
+            val token = task.result
+            var uid = auth.currentUser?.uid
+            val userData = UserData(
+                userId = uid,
+                name = name ?: userData.value?.name,
+                number = number ?: userData.value?.number,
+                imageUrl = imageUrl ?: userData.value?.imageUrl,
+                fcmToken = token
+            )
+            uid?.let {
+                inProcess.value = true
+                db.collection(USER_NODE).document(uid).get().addOnSuccessListener {
+                    if (it.exists()) {
+                        //update user data
+                        db.collection(USER_NODE).document(uid).update(userData.toMap())
+                            .addOnSuccessListener {
+                                inProcess.value = false
+                                getUserData(uid)
+                            }.addOnFailureListener {
+                                handleException(it, "Failed to update user")
+                                Toast.makeText(context, "Failed to update user", Toast.LENGTH_SHORT)
+                                    .show()
+
+                            }
+
+                    } else {
+                        db.collection(USER_NODE).document(uid).set(userData)
+                        inProcess.value = false
+                        getUserData(uid)
+                    }
                 }
-        }
+                    .addOnFailureListener {
+                        Toast.makeText(context, "Cannot retrieve user", Toast.LENGTH_SHORT).show()
+                    }
+            }
+        })
     }
 
     private fun getUserData(uid:String) {
@@ -380,13 +481,15 @@ class LCViewModel @Inject constructor(
                                         userData.value?.userId,
                                         userData.value?.name,
                                         userData.value?.number,
-                                        userData.value?.imageUrl
+                                        userData.value?.imageUrl,
+                                        userData.value?.fcmToken
                                     ),
                                     ChatUser(
                                         chatPartner.userId,
                                         chatPartner.name,
                                         chatPartner.number,
-                                        chatPartner.imageUrl
+                                        chatPartner.imageUrl,
+                                        chatPartner.fcmToken
                                     )
                                 )
                                 db.collection(CHATS).document(id).set(chat)

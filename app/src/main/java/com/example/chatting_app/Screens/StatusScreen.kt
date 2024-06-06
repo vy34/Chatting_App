@@ -97,6 +97,25 @@ fun StatusScreen(navController: NavController, vm: LCViewModel) {
                                     }
                                 }
                             }
+                        }else if (otherStatuses.isNotEmpty()){
+                            CommonRow(
+                                imageUrl = otherStatuses[0].user.imageUrl,
+                                name = otherStatuses[0].user.name
+                            ) {
+                                navigateTo(navController= navController,
+                                    DestinationScreen.SingleStatus.createRoute(otherStatuses[0].user.userId!!))
+                            }
+                            CommonDivider()
+                            val uniqueUsers = otherStatuses.map { it.user }.toSet().toList()
+                            LazyColumn(modifier = Modifier.weight(1f)) {
+                                items(uniqueUsers){
+                                        user ->
+                                    CommonRow(imageUrl = user.imageUrl, name = user.name){
+                                        navigateTo(navController = navController, DestinationScreen.SingleStatus.createRoute(user.userId!!)
+                                        )
+                                    }
+                                }
+                            }
                         }
 
                     }
