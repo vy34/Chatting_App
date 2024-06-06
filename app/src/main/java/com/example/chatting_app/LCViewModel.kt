@@ -201,7 +201,7 @@ class LCViewModel @Inject constructor(
 
                     val fcmMessage = FCMMessage(
                         message = Message(
-                            token = chat!!.user2.fcmToken!!,
+                            token = chat!!.user1.fcmToken!!,
                             notification = notification
                         )
                     )
@@ -218,12 +218,12 @@ class LCViewModel @Inject constructor(
                     val response = client.newCall(request).execute()
                     withContext(Dispatchers.Main) {
                         if (!response.isSuccessful) {
-                            Toast.makeText(context, "Token: ${chat.user2.fcmToken}", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Token: ${chat.user1.fcmToken}", Toast.LENGTH_SHORT).show()
 
                             Log.d("Notification", "Unexpected code $response")
                         } else {
                             Log.d("Notification", "Notification sent successfully")
-                            Log.d("Notification", "Token: ${chat.user2.fcmToken}")
+                            Log.d("Notification", "Token: ${chat.user1.fcmToken}")
                             Log.d("Notification", "Title: ${notification.title}")
                             Log.d("Notification", "Body: ${notification.body}")
                         }
@@ -304,8 +304,11 @@ class LCViewModel @Inject constructor(
                             createOrUpdateProfile(context,name,number)
                             signIn.value=true
                         }else{
-                            Toast.makeText(context, "Failed to sign in user", Toast.LENGTH_SHORT).show()
+                            val exception = it.exception
+                            val errorMessage = exception?.message ?: "Failed to sign in user"
+                            Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
                             inProcess.value = false
+                            Log.e("SignUpError", "Error creating user", exception)
                         }
                     }
                 }
@@ -516,8 +519,8 @@ class LCViewModel @Inject constructor(
             ChatUser(
                 userData.value?.userId,
                 userData.value?.name,
-                userData.value?.imageUrl,
                 userData.value?.number,
+                userData.value?.imageUrl,
             ),
             imageUrl,
             System.currentTimeMillis()

@@ -5,16 +5,19 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.paddingFromBaseline
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -26,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -78,7 +82,25 @@ fun CommonImage(
         modifier = modifier,
         contentScale = contentScale
     )
+}
 
+@Composable
+fun CommonImage2(
+    data: String?,
+    modifier: Modifier = Modifier.wrapContentSize(),
+    contentScale: ContentScale = ContentScale.Crop
+) {
+    val painter = if (data.isNullOrEmpty()) {
+        painterResource(id = R.drawable.image_user_default) // Thay thế bằng ID hình ảnh mặc định của bạn
+    } else {
+        rememberImagePainter(data = data)
+    }
+    Image(
+        painter = painter,
+        contentDescription = null,
+        modifier = modifier,
+        contentScale = contentScale
+    )
 }
 
 @Composable
@@ -121,6 +143,34 @@ fun CommonRow(imageUrl: String?, name: String?, onItemClick: () -> Unit) {
                 .clip(CircleShape)
                 .background(Color.Red)
         )
+        Text(
+            text = name ?: "---",
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(start = 4.dp)
+        )
+    }
+}
+@Composable
+fun CommonRow2(imageUrl: String?, name: String?, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(75.dp)
+            .clickable {(onClick.invoke())}
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        val painter = if (imageUrl.isNullOrEmpty()) {
+            painterResource(id = R.drawable.image_user_default)
+        } else {
+            rememberImagePainter(data = imageUrl)
+        }
+        Image(
+            painter = painter,
+            contentDescription = null,
+            modifier = Modifier.size(40.dp).clip(CircleShape)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = name ?: "---",
             fontWeight = FontWeight.Bold,

@@ -71,6 +71,7 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.size.Scale
 import coil.size.Size
+import com.example.chatting_app.CommonImage2
 import kotlinx.coroutines.launch
 
 @Composable
@@ -240,7 +241,7 @@ fun ChatHeader(name: String, imageUrl: String, onBackClicked: () -> Unit) {
                 onBackClicked.invoke()
             }
             .padding(8.dp))
-        CommonImage(
+        CommonImage2(
             data = imageUrl, modifier = Modifier
                 .padding(8.dp)
                 .size(50.dp)
@@ -345,13 +346,6 @@ fun ReplyBox(
         if (showToast) {
             LaunchedEffect(showToast) {
                 Toast.makeText(context, "Please enter a message or select an image", Toast.LENGTH_SHORT).show()
-                showToast = false
-            }
-        }
-
-        if (showToast) {
-            LaunchedEffect(showToast) {
-                Toast.makeText(context, "Please enter ", Toast.LENGTH_SHORT).show()
                 showToast = false
             }
         }

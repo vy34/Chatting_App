@@ -1,6 +1,7 @@
 package com.example.chatting_app.Screens
 
 import android.R
+import android.annotation.SuppressLint
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -27,11 +28,13 @@ import androidx.navigation.NavController
 import com.example.chatting_app.CommonDivider
 import com.example.chatting_app.CommonProcessBar
 import com.example.chatting_app.CommonRow
+import com.example.chatting_app.CommonRow2
 import com.example.chatting_app.DestinationScreen
 import com.example.chatting_app.LCViewModel
 import com.example.chatting_app.TitleText
 import com.example.chatting_app.navigateTo
 
+@SuppressLint("SuspiciousIndentation")
 @Composable
 fun StatusScreen(navController: NavController, vm: LCViewModel) {
   val inProcess = vm.inProgressStatus.value
@@ -79,7 +82,7 @@ fun StatusScreen(navController: NavController, vm: LCViewModel) {
                         }
                     } else {
                         if(myStatuses.isNotEmpty()){
-                            CommonRow(
+                            CommonRow2(
                                 imageUrl = myStatuses[0].user.imageUrl,
                                 name = myStatuses[0].user.name
                             ) {
@@ -91,14 +94,14 @@ fun StatusScreen(navController: NavController, vm: LCViewModel) {
                             LazyColumn(modifier = Modifier.weight(1f)) {
                                 items(uniqueUsers){
                                         user ->
-                                    CommonRow(imageUrl = user.imageUrl, name = user.name){
+                                    CommonRow2(imageUrl = user.imageUrl, name = user.name){
                                         navigateTo(navController = navController, DestinationScreen.SingleStatus.createRoute(user.userId!!)
                                         )
                                     }
                                 }
                             }
                         }else if (otherStatuses.isNotEmpty()){
-                            CommonRow(
+                            CommonRow2(
                                 imageUrl = otherStatuses[0].user.imageUrl,
                                 name = otherStatuses[0].user.name
                             ) {
@@ -110,7 +113,7 @@ fun StatusScreen(navController: NavController, vm: LCViewModel) {
                             LazyColumn(modifier = Modifier.weight(1f)) {
                                 items(uniqueUsers){
                                         user ->
-                                    CommonRow(imageUrl = user.imageUrl, name = user.name){
+                                    CommonRow2(imageUrl = user.imageUrl, name = user.name){
                                         navigateTo(navController = navController, DestinationScreen.SingleStatus.createRoute(user.userId!!)
                                         )
                                     }
@@ -129,7 +132,6 @@ fun StatusScreen(navController: NavController, vm: LCViewModel) {
         )
 
     }
-
 }
 
 @Composable
@@ -148,3 +150,4 @@ fun FAB(
             tint = Color.White)
     }
 }
+
