@@ -8,6 +8,7 @@ import android.util.Log
 import android.util.Patterns
 import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.ViewModel
 import com.example.chatting_app.Data.CHATS
@@ -22,6 +23,7 @@ import com.example.chatting_app.Data.UserData
 import com.example.chatting_app.Data.Voice
 import com.google.android.play.integrity.internal.c
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
@@ -104,31 +106,63 @@ class LCViewModel @Inject constructor(
         }
     }
 
-    fun onSendReply(chatId: String, message: String, imageUri: Uri? = null) {
-        if (imageUri != null) {
-            uploadImage(imageUri, onSuccess = { imageUrl ->
-                sendMessage(chatId, message, imageUrl)
-            }, onFailure = {
-                handleException(it, "Image upload failed")
-            })
+    fun onSendReply(context: Context,chatId: String, message: String, imageUri: Uri? = null) {
+        if (message.isNotBlank() || imageUri != null) {
+            if (imageUri != null) {
+                uploadImage(imageUri, onSuccess = { imageUrl ->
+                    sendMessage(chatId, message, imageUrl)
+                }, onFailure = {
+                    handleException(it, "Image upload failed")
+                })
+            } else {
+                sendMessage(chatId, message, null)
+            }
         } else {
-            sendMessage(chatId, message, null)
+            // Hiển thị thông báo cho người dùng
+            Toast.makeText(context, "Please enter a message or select an image", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun sendMessage(chatId: String, message: String, imageUrl: String?) {
         val time = Calendar.getInstance().time.toString()
+        val messageId = db.collection(CHATS)
+            .document(chatId)
+            .collection(MESSAGE)
+            .document()
+            .id
         val msg = Message(
             sendBy = userData.value?.userId,
             message = message,
+            messageId = messageId,
             timeStamp = time,
-            imageUrl = imageUrl
+            imageUrl = imageUrl,
+            deleted = false
         )
         db.collection(CHATS)
             .document(chatId)
             .collection(MESSAGE)
-            .document()
+            .document(messageId)
             .set(msg)
+    }
+
+    fun deleteMessage(chatId: String, messageId: String) {
+        val db = FirebaseFirestore.getInstance()
+        val messageRef = db.collection(CHATS)
+            .document(chatId)
+            .collection(MESSAGE)
+            .document(messageId)
+
+        messageRef.update(
+            mapOf(
+                "message" to "",
+                "imageUrl" to "",
+                "deleted" to true
+            )
+        ).addOnSuccessListener {
+
+        }.addOnFailureListener { e ->
+
+        }
     }
 
     fun uploadImage(uri: Uri, onSuccess: (String) -> Unit, onFailure: (Exception) -> Unit) {

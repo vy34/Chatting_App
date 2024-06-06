@@ -30,8 +30,10 @@ data class ChatUser(
 data class Message(
     var sendBy: String?="",
     val message: String?="",
+    val messageId: String? = "",
     val timeStamp: String?="",
-    val imageUrl: String? = ""
+    val imageUrl: String? = "",
+    val deleted: Boolean = false
 )
 
 data class Status(
