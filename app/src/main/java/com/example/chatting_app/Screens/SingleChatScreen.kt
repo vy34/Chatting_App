@@ -1,13 +1,17 @@
 package com.example.chatting_app.Screens
 
-import android.annotation.SuppressLint
 import android.net.Uri
+import android.util.Log
+import android.view.MotionEvent
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +19,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -25,9 +30,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.rounded.ArrowBack
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -42,13 +47,18 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
 import com.example.chatting_app.CommonDivider
@@ -63,13 +73,17 @@ import coil.size.Scale
 import coil.size.Size
 import kotlinx.coroutines.launch
 
-
 @Composable
-fun SingleChatScreen(navController: NavController, vm: LCViewModel,voice: VoiceToTextParser, chatId: String) {
+fun SingleChatScreen(
+    navController: NavController,
+    vm: LCViewModel,
+    voice: VoiceToTextParser,
+    chatId: String
+) {
+
     var reply by rememberSaveable {
         mutableStateOf("")
     }
-
     val voiceToTextParser = remember { voice }
     val context = LocalContext.current
 
@@ -78,7 +92,6 @@ fun SingleChatScreen(navController: NavController, vm: LCViewModel,voice: VoiceT
         vm.onSendReply(context,chatId, message, imageUri)
         reply = ""
     }
-
     var chatMessage = vm.chatMessages
     val myUser = vm.userData.value
     var currentChat = vm.chats.value.first { it.chatId == chatId }
@@ -105,20 +118,28 @@ fun SingleChatScreen(navController: NavController, vm: LCViewModel,voice: VoiceT
         MessageBox(
             modifier = Modifier.weight(1f),
             chatMessages = chatMessage.value,
-            currentUserId = myUser?.userId ?: ""
+            currentUserId = myUser?.userId ?: "",
+            onDeleteMessage ={messageId -> vm.deleteMessage(chatId,messageId)}
         )
         ReplyBox(
             reply = reply,
             onReplyChange = { reply = it },
-
             onSendReply = { message, imageUri -> onSendReply(message, imageUri) },
             onStartListening = { voiceToTextParser.startListening("en-US") }
         ) { voiceToTextParser.stopListening() }
     }
 }
 
+
+
 @Composable
-fun MessageBox(modifier: Modifier, chatMessages: List<Message>, currentUserId: String) {
+fun MessageBox(
+    modifier: Modifier,
+    chatMessages: List<Message>,
+    currentUserId: String,
+    onDeleteMessage: (String) -> Unit
+) {
+
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
@@ -129,41 +150,80 @@ fun MessageBox(modifier: Modifier, chatMessages: List<Message>, currentUserId: S
             }
         }
     }
-    LazyColumn(
-        modifier = modifier,
-        state = listState
-    ) {
+    LazyColumn(modifier = modifier, state = listState) {
         items(chatMessages) { msg ->
-            val isCurrentUser = msg.sendBy == currentUserId
-            val color = if (isCurrentUser) Color(0xFF68C400) else Color(0xFFC0C0C0)
-            Row(
+            MessageItem(message=msg,currentUserId = currentUserId,onDeleteMessage = onDeleteMessage)
+        }
+    }
+
+}
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+fun MessageItem(message: Message, currentUserId: String, onDeleteMessage: (String) -> Unit) {
+    val isCurrentUser = message.sendBy == currentUserId
+    var isMessageLongPressed by remember { mutableStateOf(false) }
+    val color = if (isCurrentUser) Color(0xFF68C400) else Color(0xFFC0C0C0)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onLongPress = { isMessageLongPressed = true },
+                    onPress = { isMessageLongPressed = false }
+                )
+            },
+
+        horizontalArrangement = if (isCurrentUser) Arrangement.End else Arrangement.Start
+    ) {
+
+        if (isMessageLongPressed && isCurrentUser && !message.deleted) {
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = "Delete Message",
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .padding(end = 10.dp)
+                    .offset(y=8.dp)
+                    .clickable { onDeleteMessage(message.messageId ?: "") }
+            )
+
+        }
+
+        if (message.deleted) {
+            Text(
+                text = "This message was deleted",
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .border(width = 1.dp, color = Color.Gray, shape = RoundedCornerShape(8.dp))
                     .padding(8.dp),
-                horizontalArrangement = if (isCurrentUser) Arrangement.End else Arrangement.Start
-            ) {
-                if ((msg.imageUrl != null)) {
-                    Image(
-                        painter = rememberImagePainter(data = msg.imageUrl),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .height(200.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .padding(4.dp)
-                    )
-                } else{
-                    Text(
-                        text = msg.message ?: "",
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(color)
-                            .padding(12.dp),
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                color = Color.Gray,
+                fontStyle = FontStyle.Italic,
+                fontSize = 12.sp
+            )
+        } else {
+            if (!message.message.isNullOrEmpty()) {
+                Text(
+                    text = message.message,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(color)
+                        .padding(12.dp),
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            if (!message.imageUrl.isNullOrEmpty()) {
+                Image(
+                    painter = rememberImagePainter(data = message.imageUrl),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .height(200.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .padding(4.dp)
+                )
             }
         }
+
     }
 }
 
@@ -190,6 +250,7 @@ fun ChatHeader(name: String, imageUrl: String, onBackClicked: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReplyBox(
     reply: String,
@@ -200,6 +261,8 @@ fun ReplyBox(
 ) {
 
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var showToast by remember { mutableStateOf(false) }
+    val context = LocalContext.current
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -215,7 +278,7 @@ fun ReplyBox(
                 painter = rememberAsyncImagePainter(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(selectedImageUri)
-                        .size(Size.ORIGINAL) // you can set custom size here
+                        .size(Size.ORIGINAL)
                         .scale(Scale.FIT)
                         .build()
                 ),
@@ -231,6 +294,7 @@ fun ReplyBox(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
 
@@ -248,14 +312,16 @@ fun ReplyBox(
             }
             Spacer(modifier = Modifier.width(8.dp))
 
+
             TextField(
                 value = reply,
                 onValueChange = onReplyChange,
-                maxLines = 3,
-                modifier = Modifier.weight(1f)
+                maxLines = 5,
+                modifier = Modifier
+                    .weight(0.8f)
+                    .padding(end = 8.dp)
+                    .clip(RoundedCornerShape(8.dp))
             )
-
-            Spacer(modifier = Modifier.width(8.dp))
             Icon(
                 Icons.Default.Send,
                 contentDescription = null,
@@ -263,10 +329,31 @@ fun ReplyBox(
                     .weight(0.2f)
                     .size(40.dp)
                     .clickable {
-                        onSendReply(reply, selectedImageUri)
-                        selectedImageUri = null
+                        if (reply.isNotBlank() || selectedImageUri != null) {
+                            onSendReply(reply, selectedImageUri)
+                            selectedImageUri = null
+                            onReplyChange("")
+                            showToast = false
+                        } else {
+                            showToast = true
+                        }
                     }
             )
+
+        }
+
+        if (showToast) {
+            LaunchedEffect(showToast) {
+                Toast.makeText(context, "Please enter a message or select an image", Toast.LENGTH_SHORT).show()
+                showToast = false
+            }
+        }
+
+        if (showToast) {
+            LaunchedEffect(showToast) {
+                Toast.makeText(context, "Please enter ", Toast.LENGTH_SHORT).show()
+                showToast = false
+            }
         }
     }
 }

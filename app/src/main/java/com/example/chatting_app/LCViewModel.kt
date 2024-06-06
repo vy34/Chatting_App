@@ -111,6 +111,7 @@ class LCViewModel @Inject constructor(
             if (imageUri != null) {
                 uploadImage(imageUri, onSuccess = { imageUrl ->
                     sendMessage(chatId, message, imageUrl)
+                    Toast.makeText(context, "Image is loading", Toast.LENGTH_LONG).show()
                 }, onFailure = {
                     handleException(it, "Image upload failed")
                 })
@@ -297,7 +298,7 @@ class LCViewModel @Inject constructor(
                             getUserData(uid)
                         }.addOnFailureListener {
                             handleException(it, "Failed to update user")
-                           Toast.makeText(context, "Failed to update user", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Failed to update user", Toast.LENGTH_SHORT).show()
 
                         }
 
@@ -404,7 +405,7 @@ class LCViewModel @Inject constructor(
 
     fun uploadStatus(uri: Uri) {
         uploadImage(uri){
-        createStatus(it.toString())
+            createStatus(it.toString())
         }
     }
 
@@ -433,16 +434,16 @@ class LCViewModel @Inject constructor(
 
             )
         ).addSnapshotListener{
-            value, error ->
+                value, error ->
             if(error!=null)
                 handleException(error)
             if (value!=null){
                 val currentConnections = arrayListOf(userData.value?.userId)
                 val chats = value.toObjects<ChatData>()
                 chats.forEach{
-                    chat ->
+                        chat ->
                     if (chat.user1.userId == userData.value?.userId){
-                       currentConnections.add(chat.user2.userId)
+                        currentConnections.add(chat.user2.userId)
                     }else
                         currentConnections.add(chat.user1.userId)
 
