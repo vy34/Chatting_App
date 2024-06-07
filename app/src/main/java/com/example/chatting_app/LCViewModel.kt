@@ -194,8 +194,9 @@ class LCViewModel @Inject constructor(
                     val client = OkHttpClient()
                     val gson = Gson()
 
+
                     val notification = Notification(
-                        title = "New Message",
+                        title = chat!!.user1.name!!,
                         body = message!!
                     )
 
@@ -357,6 +358,34 @@ class LCViewModel @Inject constructor(
 
     }
 
+    private fun updateStatusImage(userId: String, imageUrl: String?) {
+        db.collection(STATUS).whereEqualTo("user.userId", userId).get().addOnSuccessListener { documents ->
+            for (document in documents) {
+                db.collection(STATUS).document(document.id).update("user.imageUrl", imageUrl)
+            }
+        }
+    }
+
+    private fun updateChatsImage(userId: String, imageUrl: String?) {
+        db.collection(CHATS).where(
+            Filter.or(
+                Filter.equalTo("user1.userId", userId),
+                Filter.equalTo("user2.userId", userId)
+            )
+        ).get().addOnSuccessListener { documents ->
+            for (document in documents) {
+                val chatData = document.toObject<ChatData>()
+                if (chatData.user1.userId == userId) {
+                    db.collection(CHATS).document(document.id).update("user1.imageUrl", imageUrl)
+                } else if (chatData.user2.userId == userId) {
+                    db.collection(CHATS).document(document.id).update("user2.imageUrl", imageUrl)
+                }
+            }
+        }.addOnFailureListener { exception ->
+            handleException(exception, "Failed to update chat user image")
+        }
+    }
+
     fun uploadImage(uri:Uri,onSuccess:(Uri)->Unit) {
         inProcess.value=true
         val storageRef=storage.reference
@@ -385,7 +414,7 @@ class LCViewModel @Inject constructor(
             }
             // Get new FCM registration token
             val token = task.result
-            var uid = auth.currentUser?.uid
+            val uid = auth.currentUser?.uid
             val userData = UserData(
                 userId = uid,
                 name = name ?: userData.value?.name,
@@ -402,21 +431,32 @@ class LCViewModel @Inject constructor(
                             .addOnSuccessListener {
                                 inProcess.value = false
                                 getUserData(uid)
+                                updateStatusImage(uid, userData.imageUrl)
+                                updateChatsImage(uid, userData.imageUrl)
                             }.addOnFailureListener {
                                 handleException(it, "Failed to update user")
                                 Toast.makeText(context, "Failed to update user", Toast.LENGTH_SHORT)
                                     .show()
-
+                                inProcess.value = false
                             }
 
                     } else {
-                        db.collection(USER_NODE).document(uid).set(userData)
-                        inProcess.value = false
-                        getUserData(uid)
+                        db.collection(USER_NODE).document(uid).set(userData).addOnSuccessListener {
+
+                            inProcess.value = false
+                            getUserData(uid)
+                            updateStatusImage(uid, userData.imageUrl)
+                            updateChatsImage(uid, userData.imageUrl)
+                        }.addOnFailureListener { e ->
+                            handleException(e, "Failed to create user")
+                            Toast.makeText(context, "Failed to create user", Toast.LENGTH_SHORT).show()
+                            inProcess.value = false
+                        }
                     }
                 }
                     .addOnFailureListener {
                         Toast.makeText(context, "Cannot retrieve user", Toast.LENGTH_SHORT).show()
+                        inProcess.value = false
                     }
             }
         })

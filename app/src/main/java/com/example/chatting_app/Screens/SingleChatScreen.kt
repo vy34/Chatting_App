@@ -115,6 +115,10 @@ fun SingleChatScreen(
             navController.popBackStack()
             vm.depopulateMessage()
         }
+        BackHandler {
+            vm.depopulateMessage()
+            navController.popBackStack()
+        }
         MessageBox(
             modifier = Modifier.weight(1f),
             chatMessages = chatMessage.value,
