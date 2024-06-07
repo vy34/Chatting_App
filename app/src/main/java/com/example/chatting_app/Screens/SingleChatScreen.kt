@@ -71,7 +71,6 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.size.Scale
 import coil.size.Size
-import com.example.chatting_app.CommonImage2
 import kotlinx.coroutines.launch
 
 @Composable
@@ -241,7 +240,7 @@ fun ChatHeader(name: String, imageUrl: String, onBackClicked: () -> Unit) {
                 onBackClicked.invoke()
             }
             .padding(8.dp))
-        CommonImage2(
+        CommonImage(
             data = imageUrl, modifier = Modifier
                 .padding(8.dp)
                 .size(50.dp)

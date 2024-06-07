@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -75,21 +76,6 @@ fun CommonImage(
     modifier: Modifier = Modifier.wrapContentSize(),
     contentScale: ContentScale = ContentScale.Crop
 ) {
-    val painter = rememberImagePainter(data = data)
-    Image(
-        painter = painter,
-        contentDescription = null,
-        modifier = modifier,
-        contentScale = contentScale
-    )
-}
-
-@Composable
-fun CommonImage2(
-    data: String?,
-    modifier: Modifier = Modifier.wrapContentSize(),
-    contentScale: ContentScale = ContentScale.Crop
-) {
     val painter = if (data.isNullOrEmpty()) {
         painterResource(id = R.drawable.image_user_default) // Thay thế bằng ID hình ảnh mặc định của bạn
     } else {
@@ -143,34 +129,6 @@ fun CommonRow(imageUrl: String?, name: String?, onItemClick: () -> Unit) {
                 .clip(CircleShape)
                 .background(Color.Red)
         )
-        Text(
-            text = name ?: "---",
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(start = 4.dp)
-        )
-    }
-}
-@Composable
-fun CommonRow2(imageUrl: String?, name: String?, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(75.dp)
-            .clickable {(onClick.invoke())}
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        val painter = if (imageUrl.isNullOrEmpty()) {
-            painterResource(id = R.drawable.image_user_default)
-        } else {
-            rememberImagePainter(data = imageUrl)
-        }
-        Image(
-            painter = painter,
-            contentDescription = null,
-            modifier = Modifier.size(40.dp).clip(CircleShape)
-        )
-        Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = name ?: "---",
             fontWeight = FontWeight.Bold,

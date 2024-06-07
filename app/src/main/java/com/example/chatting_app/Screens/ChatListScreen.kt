@@ -31,7 +31,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.chatting_app.CommonProcessBar
 import com.example.chatting_app.CommonRow
-import com.example.chatting_app.CommonRow2
 import com.example.chatting_app.DestinationScreen
 import com.example.chatting_app.LCViewModel
 import com.example.chatting_app.TitleText
@@ -91,7 +90,7 @@ fun ChatListScreen(navController: NavController,vm:LCViewModel) {
                                 } else {
                                     chat.user1
                                 }
-                                CommonRow2(imageUrl = chatUser.imageUrl, name = chatUser.name) {
+                                CommonRow(imageUrl = chatUser.imageUrl, name = chatUser.name) {
                                     chat.chatId?.let {
                                         navigateTo(navController, DestinationScreen.SingleChat.createRoute(id = it))
                                     }

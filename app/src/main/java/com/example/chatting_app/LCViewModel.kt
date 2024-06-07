@@ -172,11 +172,11 @@ class LCViewModel @Inject constructor(
             .collection(MESSAGE)
             .document(messageId)
             .set(msg)
-        sendNotification( applicationContext,msg.message,chatId)
+        sendNotification( applicationContext,msg.message,chatId,userData.value!!.userId!!)
     }
 
 
-    private fun sendNotification( context: Context,message: String?, chatId: String) {
+    private fun sendNotification(context: Context, message: String?, chatId: String,currentUserId: String) {
 
 
         val chat = chats.value.find { it.chatId == chatId }
@@ -199,13 +199,18 @@ class LCViewModel @Inject constructor(
                         body = message!!
                     )
 
+                    val token = if (currentUserId == chat!!.user1.userId) {
+                        chat.user2.fcmToken
+                    } else {
+                        chat.user1.fcmToken
+                    }
+
                     val fcmMessage = FCMMessage(
                         message = Message(
-                            token = chat!!.user1.fcmToken!!,
+                            token = token!!,
                             notification = notification
                         )
                     )
-
                     val json = gson.toJson(fcmMessage)
                     val body = json.toRequestBody("application/json; charset=utf-8".toMediaType())
 
@@ -223,7 +228,7 @@ class LCViewModel @Inject constructor(
                             Log.d("Notification", "Unexpected code $response")
                         } else {
                             Log.d("Notification", "Notification sent successfully")
-                            Log.d("Notification", "Token: ${chat.user1.fcmToken}")
+                            Log.d("Notification", "Token: ${fcmMessage.message.token}")
                             Log.d("Notification", "Title: ${notification.title}")
                             Log.d("Notification", "Body: ${notification.body}")
                         }
