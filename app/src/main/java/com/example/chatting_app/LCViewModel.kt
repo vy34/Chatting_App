@@ -135,6 +135,27 @@ class LCViewModel @Inject constructor(
         }
     }
 
+    fun searchMessages(chatId: String, query: String) {
+        inProgressChatMessage.value = true
+        currentChatMessageListener = db.collection(CHATS).document(chatId).collection(MESSAGE)
+            .addSnapshotListener { value, error ->
+                if (error != null) {
+                    handleException(error)
+                }
+                if (value != null) {
+                    val filteredMessages = value.documents.mapNotNull {
+                        it.toObject<Message>()
+                    }.filter { message ->
+                        message.message?.contains(query, ignoreCase = true) ?: false
+                    }.sortedBy { it.timeStamp }
+
+                    chatMessages.value = filteredMessages
+                    inProgressChatMessage.value = false
+                }
+            }
+    }
+
+
     fun onSendReply(context: Context,chatId: String, message: String, imageUri: Uri? = null) {
         if (message.isNotBlank() || imageUri != null) {
             if (imageUri != null) {

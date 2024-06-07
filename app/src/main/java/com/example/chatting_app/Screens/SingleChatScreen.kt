@@ -1,8 +1,6 @@
 package com.example.chatting_app.Screens
 
 import android.net.Uri
-import android.util.Log
-import android.view.MotionEvent
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -31,6 +29,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -52,11 +51,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -110,21 +109,47 @@ fun SingleChatScreen(
             reply += it
         }
     }
-    Column {
-        ChatHeader(name = chatUser.name ?: "", imageUrl = chatUser.imageUrl ?: "") {
-            navController.popBackStack()
-            vm.depopulateMessage()
+
+    val onSearch: (String) -> Unit = { query ->
+        if (query.isNotBlank()) {
+            vm.searchMessages(chatId, query)
+        } else {
+            vm.populateMessages(chatId)
         }
+    }
+
+    Column {
+        ChatHeader(
+            name = chatUser.name ?: "",
+            imageUrl = chatUser.imageUrl ?: "",
+            onBackClicked = {
+                navController.popBackStack()
+                vm.depopulateMessage()
+            },
+            onSearch = onSearch
+        )
         BackHandler {
             vm.depopulateMessage()
             navController.popBackStack()
         }
-        MessageBox(
-            modifier = Modifier.weight(1f),
-            chatMessages = chatMessage.value,
-            currentUserId = myUser?.userId ?: "",
-            onDeleteMessage ={messageId -> vm.deleteMessage(chatId,messageId)}
-        )
+        if (chatMessage.value.isEmpty()) {
+            Text(
+                text = "No matching messages found",
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                textAlign = TextAlign.Center,
+                color = Color.Gray
+            )
+        } else {
+            MessageBox(
+                modifier = Modifier.weight(1f),
+                chatMessages = chatMessage.value,
+                currentUserId = myUser?.userId ?: "",
+                onDeleteMessage = { messageId -> vm.deleteMessage(chatId, messageId) }
+            )
+        }
         ReplyBox(
             reply = reply,
             onReplyChange = { reply = it },
@@ -232,27 +257,62 @@ fun MessageItem(message: Message, currentUserId: String, onDeleteMessage: (Strin
 }
 
 @Composable
-fun ChatHeader(name: String, imageUrl: String, onBackClicked: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(Icons.Rounded.ArrowBack, contentDescription = null, modifier = Modifier
-            .clickable {
-                onBackClicked.invoke()
-            }
-            .padding(8.dp))
-        CommonImage(
-            data = imageUrl, modifier = Modifier
-                .padding(8.dp)
-                .size(50.dp)
-                .clip(CircleShape)
-        )
-        Text(text = name, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 4.dp))
+fun ChatHeader(name: String, imageUrl: String, onBackClicked: () -> Unit, onSearch: (String) -> Unit) {
+    var isSearchVisible by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+
+    Column {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                Icons.Rounded.ArrowBack,
+                contentDescription = null,
+                modifier = Modifier
+                    .clickable { onBackClicked() }
+                    .padding(8.dp)
+            )
+            CommonImage(
+                data = imageUrl,
+                modifier = Modifier
+                    .padding(8.dp)
+                    .size(50.dp)
+                    .clip(CircleShape)
+            )
+            Text(
+                text = name,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .padding(start = 4.dp)
+                    .weight(1f)
+            )
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = null,
+                modifier = Modifier
+                    .clickable { isSearchVisible = !isSearchVisible }
+                    .padding(8.dp)
+            )
+        }
+        if (isSearchVisible) {
+            TextField(
+                value = searchQuery,
+                onValueChange = {
+                    searchQuery = it
+                    onSearch(it)
+                },
+                placeholder = { Text(text = "Search...") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp)
+            )
+        }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
