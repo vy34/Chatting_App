@@ -358,15 +358,18 @@ class LCViewModel @Inject constructor(
 
     }
 
-    private fun updateStatusImage(userId: String, imageUrl: String?) {
+    private fun updateStatus(userId: String,name: String?, imageUrl: String?) {
         db.collection(STATUS).whereEqualTo("user.userId", userId).get().addOnSuccessListener { documents ->
             for (document in documents) {
-                db.collection(STATUS).document(document.id).update("user.imageUrl", imageUrl)
+                val updates = mutableMapOf<String, Any?>()
+                updates["user.name"] = name
+                updates["user.imageUrl"] = imageUrl
+                db.collection(STATUS).document(document.id).update(updates)
             }
         }
     }
 
-    private fun updateChatsImage(userId: String, imageUrl: String?) {
+    private fun updateChat(userId: String,name: String?, imageUrl: String?) {
         db.collection(CHATS).where(
             Filter.or(
                 Filter.equalTo("user1.userId", userId),
@@ -375,10 +378,16 @@ class LCViewModel @Inject constructor(
         ).get().addOnSuccessListener { documents ->
             for (document in documents) {
                 val chatData = document.toObject<ChatData>()
+                val updates = mutableMapOf<String, Any?>()
                 if (chatData.user1.userId == userId) {
-                    db.collection(CHATS).document(document.id).update("user1.imageUrl", imageUrl)
+                    updates["user1.name"] = name
+                    updates["user1.imageUrl"] = imageUrl
                 } else if (chatData.user2.userId == userId) {
-                    db.collection(CHATS).document(document.id).update("user2.imageUrl", imageUrl)
+                    updates["user2.name"] = name
+                    updates["user2.imageUrl"] = imageUrl
+                }
+                if (updates.isNotEmpty()) {
+                    db.collection(CHATS).document(document.id).update(updates)
                 }
             }
         }.addOnFailureListener { exception ->
@@ -431,8 +440,8 @@ class LCViewModel @Inject constructor(
                             .addOnSuccessListener {
                                 inProcess.value = false
                                 getUserData(uid)
-                                updateStatusImage(uid, userData.imageUrl)
-                                updateChatsImage(uid, userData.imageUrl)
+                                updateStatus(uid, userData.name, userData.imageUrl)
+                                updateChat(uid,userData.name, userData.imageUrl)
                             }.addOnFailureListener {
                                 handleException(it, "Failed to update user")
                                 Toast.makeText(context, "Failed to update user", Toast.LENGTH_SHORT)
@@ -445,8 +454,8 @@ class LCViewModel @Inject constructor(
 
                             inProcess.value = false
                             getUserData(uid)
-                            updateStatusImage(uid, userData.imageUrl)
-                            updateChatsImage(uid, userData.imageUrl)
+                            updateStatus(uid, userData.name, userData.imageUrl)
+                            updateChat(uid,userData.name, userData.imageUrl)
                         }.addOnFailureListener { e ->
                             handleException(e, "Failed to create user")
                             Toast.makeText(context, "Failed to create user", Toast.LENGTH_SHORT).show()
