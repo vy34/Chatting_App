@@ -30,8 +30,11 @@ import com.example.chatting_app.CommonProcessBar
 import com.example.chatting_app.CommonRow
 import com.example.chatting_app.DestinationScreen
 import com.example.chatting_app.LCViewModel
+import com.example.chatting_app.R
 import com.example.chatting_app.TitleText
 import com.example.chatting_app.navigateTo
+import com.example.chatting_app.ui.theme.Purple80
+import com.example.chatting_app.ui.theme.colorResource
 
 @SuppressLint("SuspiciousIndentation")
 @Composable
@@ -139,7 +142,7 @@ fun FAB(
 ){
     FloatingActionButton(
         onClick = onFabClick,
-        containerColor = MaterialTheme.colorScheme.secondary,
+        containerColor = colorResource(R.color.primColor),
         shape = CircleShape,
         modifier = Modifier.padding(bottom = 40.dp)
     ) {

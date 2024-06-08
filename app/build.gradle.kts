@@ -116,6 +116,6 @@ dependencies {
     implementation ("com.google.code.gson:gson:2.8.6")
     implementation ("com.google.auth:google-auth-library-oauth2-http:1.7.0")
     implementation ("com.google.auth:google-auth-library-credentials:1.7.0")
-    
+    implementation("com.exyte:animated-navigation-bar:1.0.0")
 
 }

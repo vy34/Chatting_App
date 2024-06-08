@@ -23,6 +23,7 @@ import com.example.chatting_app.Data.Status
 import com.example.chatting_app.Data.USER_NODE
 import com.example.chatting_app.Data.UserData
 import com.example.chatting_app.Data.Voice
+import com.example.chatting_app.ui.theme.colorResource
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.auth.FirebaseAuth
@@ -549,6 +550,7 @@ class LCViewModel @Inject constructor(
                         .get()
                         .addOnSuccessListener {
                             if (it.isEmpty){
+                                Toast.makeText(applicationContext, "Number not found", Toast.LENGTH_SHORT).show()
                                 handleException(customMessage = "number not found")
                             } else {
                                 val chatPartner = it.toObjects<UserData>()[0]

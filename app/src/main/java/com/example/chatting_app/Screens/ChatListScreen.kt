@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -33,8 +34,10 @@ import com.example.chatting_app.CommonProcessBar
 import com.example.chatting_app.CommonRow
 import com.example.chatting_app.DestinationScreen
 import com.example.chatting_app.LCViewModel
+import com.example.chatting_app.R
 import com.example.chatting_app.TitleText
 import com.example.chatting_app.navigateTo
+import com.example.chatting_app.ui.theme.colorResource
 
 @Composable
 fun ChatListScreen(navController: NavController,vm:LCViewModel) {
@@ -130,12 +133,14 @@ fun FAB(
                     onClick = {
                         onAddChat(addChatMember.value)
                         addChatMember.value = ""
-                    }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = colorResource(R.color.primColor))
                 ) {
                     Text(text = "Add Chat")
                 }
             },
-            title = { Text(text = "Add Chat")},
+            title = { Text(text = "Add Chats")},
             text = {
                 OutlinedTextField(
                     value = addChatMember.value,
@@ -147,7 +152,7 @@ fun FAB(
     } else {
         FloatingActionButton(
             onClick = onFabClick,
-            containerColor = MaterialTheme.colorScheme.secondary,
+            containerColor = colorResource(R.color.primColor),
             shape = CircleShape,
             modifier = Modifier.padding(bottom = 40.dp)
         ) {
