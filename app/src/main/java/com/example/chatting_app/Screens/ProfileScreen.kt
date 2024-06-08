@@ -2,12 +2,14 @@ package com.example.chatting_app.Screens
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,9 +18,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.SaveAlt
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -29,8 +41,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.paint
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.chatting_app.CommonDivider
@@ -38,6 +55,7 @@ import com.example.chatting_app.CommonImage
 import com.example.chatting_app.CommonProcessBar
 import com.example.chatting_app.DestinationScreen
 import com.example.chatting_app.LCViewModel
+import com.example.chatting_app.R
 import com.example.chatting_app.navigateTo
 
 @Composable
@@ -59,7 +77,12 @@ fun ProfileScreen(navController: NavController, vm: LCViewModel) {
                 modifier = Modifier
                     .weight(1f)
                     .verticalScroll(rememberScrollState())
-                    .padding(8.dp),
+                    .padding(8.dp)
+                    .paint(
+                        painterResource(id = R.drawable.b4),
+                        contentScale = ContentScale.FillBounds
+                    )
+                ,
                 vm=vm,
                 name = name,
                 number = number,
@@ -106,16 +129,14 @@ fun ProfileContent(
                 .padding(8.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = "Back", modifier = Modifier.clickable { onBack.invoke() })
-            Text(text = "Save", modifier = Modifier.clickable { onSave.invoke() })
+            Icon(Icons.Default.ArrowBackIosNew, contentDescription =null,modifier=Modifier.clickable { onBack.invoke() } )
+            Icon(Icons.Default.SaveAlt, contentDescription = null,modifier=Modifier.clickable { onSave.invoke() })
         }
 
-        CommonDivider()
+            ProfileImage(imageUrl = imageUrl, vm = vm)
 
-        ProfileImage(imageUrl = imageUrl, vm = vm)
 
-        CommonDivider()
-
+        Spacer(modifier = Modifier.padding(20.dp))
         Column(modifier = Modifier.padding(8.dp)) {
             Row(
                 modifier = Modifier
@@ -124,13 +145,17 @@ fun ProfileContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(text = "Name", modifier = Modifier.width(100.dp))
-                TextField(
+                OutlinedTextField(
                     value = name,
                     onValueChange = onNameChange,
-                    colors = TextFieldDefaults.textFieldColors(
-                        focusedTextColor = Color.Black,
-                        containerColor = Color.Transparent
-                    )
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = Color.Black,
+                        unfocusedBorderColor = Color.LightGray
+                    ),
+                    shape = RoundedCornerShape(20.dp),
+                    modifier= Modifier
+                        .padding(8.dp)
+                        .clip(RoundedCornerShape(20.dp))
                 )
             }
 
@@ -141,18 +166,22 @@ fun ProfileContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(text = "Number", modifier = Modifier.width(100.dp))
-                TextField(
+                OutlinedTextField(
                     value = number,
                     onValueChange = onNumberChange,
-                    colors = TextFieldDefaults.textFieldColors(
-                        focusedTextColor = Color.Black,
-                        containerColor = Color.Transparent
-                    )
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = Color.Black,
+                        unfocusedBorderColor = Color.LightGray
+                    ),
+                    shape = RoundedCornerShape(20.dp),
+                    modifier= Modifier
+                        .padding(8.dp)
+                        .clip(RoundedCornerShape(20.dp))
                 )
             }
         }
 
-        CommonDivider()
+
 
         Row(
             modifier = Modifier
@@ -160,6 +189,7 @@ fun ProfileContent(
                 .padding(16.dp),
             horizontalArrangement = Arrangement.Center
         ) {
+            Icon(Icons.Default.Logout, contentDescription =null , modifier = Modifier.clickable { onLogOut.invoke() })
             Text(text = "Log Out", modifier = Modifier.clickable { onLogOut.invoke() })
         }
     }
@@ -188,7 +218,7 @@ fun ProfileImage(imageUrl:String?,vm:LCViewModel) {
                 .size(100.dp)){
                 CommonImage(data = imageUrl)
             }
-            Text(text = "Change Prifile Picture")
+//            Text(text = "Change Prifile Picture")
         }
         val isLoading=vm.inProcess.value
         if (isLoading){

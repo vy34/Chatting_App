@@ -34,8 +34,10 @@ import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -49,8 +51,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
@@ -118,7 +122,8 @@ fun SingleChatScreen(
         }
     }
 
-    Column {
+    Column(modifier = Modifier .paint(painterResource(id = R.drawable.b4), contentScale = ContentScale.FillBounds)
+    ) {
         ChatHeader(
             name = chatUser.name ?: "",
             imageUrl = chatUser.imageUrl ?: "",
@@ -191,7 +196,7 @@ fun MessageBox(
 fun MessageItem(message: Message, currentUserId: String, onDeleteMessage: (String) -> Unit) {
     val isCurrentUser = message.sendBy == currentUserId
     var isMessageLongPressed by remember { mutableStateOf(false) }
-    val color = if (isCurrentUser) Color(0xFF68C400) else Color(0xFFC0C0C0)
+    val color = if (isCurrentUser) Color(0xFF5C469C) else Color(0xFFC0C0C0)
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -212,7 +217,7 @@ fun MessageItem(message: Message, currentUserId: String, onDeleteMessage: (Strin
                 contentDescription = "Delete Message",
                 modifier = Modifier
                     .padding(end = 10.dp)
-                    .offset(y=8.dp)
+                    .offset(y=10.dp)
                     .clickable { onDeleteMessage(message.messageId ?: "") }
             )
 
@@ -298,16 +303,18 @@ fun ChatHeader(name: String, imageUrl: String, onBackClicked: () -> Unit, onSear
             )
         }
         if (isSearchVisible) {
-            TextField(
+            OutlinedTextField(
                 value = searchQuery,
                 onValueChange = {
                     searchQuery = it
                     onSearch(it)
                 },
                 placeholder = { Text(text = "Search...") },
-                modifier = Modifier
+                shape = RoundedCornerShape(20.dp),
+                modifier= Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp)
+                    .clip(RoundedCornerShape(20.dp))
             )
         }
     }
@@ -335,7 +342,6 @@ fun ReplyBox(
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
-        CommonDivider()
 
         if (selectedImageUri != null) {
             Image(
@@ -377,14 +383,18 @@ fun ReplyBox(
             Spacer(modifier = Modifier.width(8.dp))
 
 
-            TextField(
+            OutlinedTextField(
                 value = reply,
                 onValueChange = onReplyChange,
                 maxLines = 5,
-                modifier = Modifier
-                    .weight(0.8f)
-                    .padding(end = 8.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = Color.Black,
+                    unfocusedBorderColor = Color.LightGray
+                ),
+                shape = RoundedCornerShape(20.dp),
+                modifier= Modifier
+                    .padding(8.dp)
+                    .clip(RoundedCornerShape(20.dp))
             )
             Icon(
                 Icons.Default.Send,

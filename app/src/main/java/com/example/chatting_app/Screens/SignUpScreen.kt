@@ -27,12 +27,15 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
@@ -61,13 +64,15 @@ fun SignUpScreen(navController: NavController, vm: LCViewModel) {
     CheckSignedIn(vm = vm, navController = navController)
     val context = LocalContext.current
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .paint(painterResource(id = R.drawable.b1), contentScale = ContentScale.FillBounds)
+    ) {
         Column(
             modifier = Modifier
-                .fillMaxSize(),
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.Center,
-//                .wrapContentHeight()
-//                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
@@ -79,7 +84,7 @@ fun SignUpScreen(navController: NavController, vm: LCViewModel) {
             val local = LocalFocusManager.current
 
             Image(
-                painter = painterResource(id = R.drawable.signup_png),
+                painter = painterResource(id = R.drawable.b2),
                 contentDescription = null,
                 modifier = Modifier
                     .size(250.dp)
@@ -101,6 +106,10 @@ fun SignUpScreen(navController: NavController, vm: LCViewModel) {
                         modifier = Modifier.size(25.dp)
                     )
                 },
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color.LightGray
+                ),
                 label = { Text(text = "Name") },
                 modifier = Modifier.padding(8.dp)
             )
@@ -115,6 +124,10 @@ fun SignUpScreen(navController: NavController, vm: LCViewModel) {
                         modifier = Modifier.size(25.dp)
                     )
                 },
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color.LightGray
+                ),
                 modifier = Modifier.padding(8.dp),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number,
@@ -132,6 +145,10 @@ fun SignUpScreen(navController: NavController, vm: LCViewModel) {
                         modifier = Modifier.size(25.dp)
                     )
                 },
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color.LightGray
+                ),
                 modifier = Modifier.padding(8.dp),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email,
@@ -152,6 +169,10 @@ fun SignUpScreen(navController: NavController, vm: LCViewModel) {
                         modifier = Modifier.size(25.dp)
                     )
                 },
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color.LightGray
+                ),
                 trailingIcon = {
                     val iconImage = if (passwordVisible.value) {
                         Icons.Filled.Visibility

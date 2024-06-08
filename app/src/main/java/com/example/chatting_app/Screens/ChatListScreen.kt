@@ -1,5 +1,6 @@
 package com.example.chatting_app.Screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,7 +27,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -71,6 +75,7 @@ fun ChatListScreen(navController: NavController,vm:LCViewModel) {
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(it)
+                        .paint(painterResource(id = R.drawable.b4), contentScale = ContentScale.FillBounds)
                 ) {
                     TitleText(txt = "Chats")
                     if (chats.isEmpty()){

@@ -1,7 +1,7 @@
 package com.example.chatting_app.Screens
 
-
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -22,7 +22,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.chatting_app.CommonDivider
@@ -44,6 +47,7 @@ fun StatusScreen(navController: NavController, vm: LCViewModel) {
         CommonProcessBar()
     }else{
         val statuses = vm.status.value
+        Log.d("StatusScreen", "Number of statuses: ${statuses.size}")
         val userData = vm.userData.value
 
         val myStatuses = statuses.filter {
@@ -71,11 +75,13 @@ fun StatusScreen(navController: NavController, vm: LCViewModel) {
                 Column(modifier = Modifier
                     .fillMaxSize()
                     .padding(it)
+                    .paint(painterResource(id = R.drawable.b4), contentScale = ContentScale.FillBounds)
+
                 ) {
                     TitleText(txt = "Status")
                     if (statuses.isEmpty()){
                         Column(modifier = Modifier
-                            .fillMaxWidth()
+                            .fillMaxSize()
                             .weight(1f),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
@@ -102,7 +108,7 @@ fun StatusScreen(navController: NavController, vm: LCViewModel) {
                                     }
                                 }
                             }
-                        }else if (otherStatuses.isNotEmpty()){
+                        } else if (otherStatuses.isNotEmpty()){
                             CommonRow(
                                 imageUrl = otherStatuses[0].user.imageUrl,
                                 name = otherStatuses[0].user.name
@@ -111,7 +117,7 @@ fun StatusScreen(navController: NavController, vm: LCViewModel) {
                                     DestinationScreen.SingleStatus.createRoute(otherStatuses[0].user.userId!!))
                             }
                             CommonDivider()
-                            val uniqueUsers = myStatuses.map { it.user }.toSet().toList()
+                            val uniqueUsers = otherStatuses.map { it.user }.toSet().toList()
                             LazyColumn(modifier = Modifier.weight(1f)) {
                                 items(uniqueUsers){
                                         user ->
@@ -134,6 +140,7 @@ fun StatusScreen(navController: NavController, vm: LCViewModel) {
         )
 
     }
+
 }
 
 @Composable
@@ -152,4 +159,3 @@ fun FAB(
             tint = Color.White)
     }
 }
-

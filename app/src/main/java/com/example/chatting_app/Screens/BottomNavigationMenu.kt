@@ -1,7 +1,6 @@
 package com.example.chatting_app.Screens
 
 import android.annotation.SuppressLint
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,29 +11,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.chatting_app.DestinationScreen
 import com.example.chatting_app.R
+import com.example.chatting_app.R.color.primColor
 import com.example.chatting_app.navigateTo
 import com.example.chatting_app.ui.theme.primaColor
-import com.example.chatting_app.ui.theme.white
-import com.exyte.animatednavbar.AnimatedNavigationBar
-import com.exyte.animatednavbar.animation.balltrajectory.Parabolic
-import com.exyte.animatednavbar.animation.indendshape.Height
-import com.exyte.animatednavbar.animation.indendshape.shapeCornerRadius
-import com.google.android.play.integrity.internal.w
+
 
 enum class BottomNavigationItem(val icon:Int,val navDestination:DestinationScreen){
     CHATLIST(R.drawable.comment,DestinationScreen.ChatList),
@@ -48,9 +39,11 @@ fun BottomNavigationMenu(selectedItem:BottomNavigationItem,navController: NavCon
 
     Row (modifier = Modifier
         .fillMaxWidth()
-        .background(Color.White)
-        .wrapContentHeight()
-        .clip(RoundedCornerShape(10.dp))
+        .height(60.dp)
+        .clip(RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp))
+        .background(color = Color(179, 153, 212)),
+        verticalAlignment = Alignment.CenterVertically
+
     ){
         for (item in BottomNavigationItem.values()){
             Image(painter = painterResource(id =item.icon),
@@ -66,7 +59,7 @@ fun BottomNavigationMenu(selectedItem:BottomNavigationItem,navController: NavCon
                 colorFilter = if (item==selectedItem)
                 ColorFilter.tint(color = primaColor)
                 else
-                ColorFilter.tint(color = Color.Gray)
+                ColorFilter.tint(color = Color.White)
             )
         }
 

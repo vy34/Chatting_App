@@ -427,7 +427,7 @@ class LCViewModel @Inject constructor(
             val result=it.metadata?.reference?.downloadUrl
             result?.addOnSuccessListener { downloadUri ->
                 onSuccess(downloadUri)
-                inProcess.value = false // Giải phóng trạng thái xử lý khi thành công
+                inProcess.value = false
             }
 
         }
