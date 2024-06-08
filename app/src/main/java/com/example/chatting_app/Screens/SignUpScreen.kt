@@ -3,6 +3,7 @@ package com.example.chatting_app.Screens
 import android.app.LocaleManager
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -62,9 +64,10 @@ fun SignUpScreen(navController: NavController, vm: LCViewModel) {
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .wrapContentHeight()
-                .verticalScroll(rememberScrollState()),
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+//                .wrapContentHeight()
+//                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
@@ -76,18 +79,17 @@ fun SignUpScreen(navController: NavController, vm: LCViewModel) {
             val local = LocalFocusManager.current
 
             Image(
-                painter = painterResource(id = R.drawable.chat), contentDescription = null,
+                painter = painterResource(id = R.drawable.signup_png),
+                contentDescription = null,
                 modifier = Modifier
-                    .size(200.dp)
-                    .padding(top = 16.dp)
-                    .padding(8.dp)
+                    .size(250.dp)
             )
             Text(
                 text = "Sign Up",
-                fontSize = 30.sp,
+                fontSize = 35.sp,
                 fontFamily = FontFamily.SansSerif,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(8.dp)
+                modifier = Modifier.padding(5.dp)
             )
             OutlinedTextField(
                 value = nameState.value,
@@ -177,7 +179,10 @@ fun SignUpScreen(navController: NavController, vm: LCViewModel) {
                     passwordState.value.text,
 
                     )
-            }, modifier = Modifier.padding(8.dp)) {
+            },
+                modifier = Modifier.padding(8.dp),
+                colors = ButtonDefaults.buttonColors(Color(0xFF5C469C))
+            ) {
                 Text(text = "Sign Up")
 
             }
@@ -185,7 +190,7 @@ fun SignUpScreen(navController: NavController, vm: LCViewModel) {
                 Text(text = "Already a user ? Go to ")
                 Text(
                     text = "Login",
-                    color = Color.Blue,
+                    color = Color(0xFF5C469C),
                     modifier = Modifier.clickable {
                         navigateTo(navController, DestinationScreen.Login.route)
                     })
