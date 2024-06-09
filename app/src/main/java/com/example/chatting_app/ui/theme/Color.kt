@@ -14,6 +14,7 @@ fun colorResource(id: Int): Color {
 
 val primaColor = Color(0xFF5C469C)
 val white = Color(0xFFFFFFFF)
+val black = Color(0xFF000000)
 
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)

@@ -8,6 +8,7 @@ import android.util.Log
 import android.util.Patterns
 import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.input.key.Key.Companion.U
 //import androidx.compose.ui.tooling.data.EmptyGroup.data
 //import androidx.compose.ui.tooling.data.EmptyGroup.data
 import androidx.core.text.isDigitsOnly
@@ -591,6 +592,7 @@ class LCViewModel @Inject constructor(
     fun uploadStatus(uri: Uri) {
         uploadImage(uri){
         createStatus(it.toString())
+        Toast.makeText(applicationContext, "Status update!", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -645,7 +647,7 @@ class LCViewModel @Inject constructor(
                         }
                     }
             }
-        }
+U        }
     }
 
 
