@@ -8,7 +8,6 @@ import android.util.Log
 import android.util.Patterns
 import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.platform.LocalContext
 //import androidx.compose.ui.tooling.data.EmptyGroup.data
 //import androidx.compose.ui.tooling.data.EmptyGroup.data
 import androidx.core.text.isDigitsOnly
@@ -23,7 +22,6 @@ import com.example.chatting_app.Data.Status
 import com.example.chatting_app.Data.USER_NODE
 import com.example.chatting_app.Data.UserData
 import com.example.chatting_app.Data.Voice
-import com.example.chatting_app.ui.theme.colorResource
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.auth.FirebaseAuth
@@ -59,7 +57,7 @@ data class Message(
 )
 
 data class Notification(
-    val title: String,
+    val title: String?,
     val body: String
 )
 
@@ -216,9 +214,14 @@ class LCViewModel @Inject constructor(
                     val client = OkHttpClient()
                     val gson = Gson()
 
+                    val name : String? = if(currentUserId == chat!!.user1.userId){
+                        chat.user1.name
+                    } else{
+                        chat.user2.name
+                    }
 
                     val notification = Notification(
-                        title = chat!!.user1.name!!,
+                        title = name,
                         body = message!!
                     )
 

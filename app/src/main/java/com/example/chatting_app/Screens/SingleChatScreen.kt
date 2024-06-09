@@ -137,24 +137,13 @@ fun SingleChatScreen(
             vm.depopulateMessage()
             navController.popBackStack()
         }
-        if (chatMessage.value.isEmpty()) {
-            Text(
-                text = "No matching messages found",
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                textAlign = TextAlign.Center,
-                color = Color.Gray
-            )
-        } else {
+
             MessageBox(
                 modifier = Modifier.weight(1f),
                 chatMessages = chatMessage.value,
                 currentUserId = myUser?.userId ?: "",
                 onDeleteMessage = { messageId -> vm.deleteMessage(chatId, messageId) }
             )
-        }
         ReplyBox(
             reply = reply,
             onReplyChange = { reply = it },
