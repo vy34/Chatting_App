@@ -168,7 +168,6 @@ class LCViewModel @Inject constructor(
                 sendMessage(chatId, message, null)
             }
         } else {
-            // Hiển thị thông báo cho người dùng
             Toast.makeText(context, "Please enter a message or select an image", Toast.LENGTH_SHORT).show()
         }
     }

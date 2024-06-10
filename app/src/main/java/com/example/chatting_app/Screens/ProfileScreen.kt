@@ -218,10 +218,9 @@ fun ProfileImage(imageUrl:String?,vm:LCViewModel) {
                 .size(100.dp)){
                 CommonImage(data = imageUrl)
             }
-//            Text(text = "Change Prifile Picture")
         }
-        val isLoading=vm.inProcess.value
-        if (isLoading){
+        val inProcess=vm.inProcess.value
+        if (inProcess){
             CommonProcessBar()
         }
 

@@ -63,6 +63,7 @@ import com.example.chatting_app.navigateTo
 @Composable
 fun LoginScreen(navController: NavController, vm: LCViewModel) {
     val context = LocalContext.current
+
     CheckSignedIn(vm = vm, navController = navController)
 
     Box(

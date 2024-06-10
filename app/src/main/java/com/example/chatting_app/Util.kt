@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
@@ -73,7 +74,7 @@ fun CommonDivider() {
 @Composable
 fun CommonImage(
     data: String?,
-    modifier: Modifier = Modifier.wrapContentSize(),
+    modifier: Modifier = Modifier.fillMaxSize(),
     contentScale: ContentScale = ContentScale.Crop
 ) {
     val painter = if (data.isNullOrEmpty()) {
@@ -127,7 +128,8 @@ fun CommonRow(imageUrl: String?, name: String?, onItemClick: () -> Unit) {
                 .padding(8.dp)
                 .size(50.dp)
                 .clip(CircleShape)
-                .background(Color.Gray)
+                .paint(painterResource(id = R.drawable.image_user_default), contentScale = ContentScale.FillBounds)
+               // .background(Color.Gray)
         )
         Text(
             text = name ?: "---",
